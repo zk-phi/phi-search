@@ -157,7 +157,7 @@ this value must be nil, if nothing is matched.")
     (message "no matches"))
   (when (>= (length phi-search--overlays) phi-search-limit)
     (message "more than %d matches" phi-search-limit)
-    (setq phi-search--overlays nil))
+    (phi-search--delete-overlays))
   (setq phi-search--selection nil))
 
 (defun phi-search--make-overlays-for-1 (query limit)
