@@ -54,8 +54,12 @@
 ;;
 ;; You may change keybindings. See "phi-search-keybindings".
 
-;; Note : When multiple-cursors is extended to multiple buffers, this command
-;;        will be no longer usable.
+;; note :
+;; Currently, this command is compatible with multiple-cursors, unlike
+;; isearch. But, this command uses multiple-cursors variables and behavior
+;; that are not documented. Therefore, after you update multiple-cursors,
+;; it is good idea to test if this command works correctly before you use
+;; this command actually.
 
 ;;; Change Log:
 
