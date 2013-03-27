@@ -32,7 +32,7 @@
 
 ;; When the command is called, a small window appears at the bottom of
 ;; the current window. Insert query there in regular expression, to start
-;; searching. While searching, following keybinds are available :
+;; searching. While searching, following keybindings are available :
 ;;
 ;; o [C-s] 'phi-search-again-or-next
 ;;
@@ -42,7 +42,7 @@
 ;; o [C-r] 'phi-search-again-or-previous
 ;;
 ;;   If query is blank, use the last query and start searching. Otherwise,
-;;   move to the next match.
+;;   move to the previous match.
 ;;
 ;; o [RET] 'phi-search-complete
 ;;
@@ -50,9 +50,9 @@
 ;;
 ;; o [C-g] 'phi-search-abort
 ;;
-;;   Finish search and back to the original position.
+;;   Abort search and back to the original position.
 ;;
-;; You may change keybinds. See "phi-search-keybindings".
+;; You may change keybindings. See "phi-search-keybindings".
 
 ;; Note : When multiple-cursors is extended to multiple buffers, this command
 ;;        will be no longer usable.
