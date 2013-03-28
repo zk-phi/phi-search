@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.0.2
+;; Version: 1.0.3
 
 ;;; Commentary:
 
@@ -51,13 +51,21 @@
 ;; o [C-g] 'phi-search-abort
 ;;
 ;;   Abort search and back to the original position.
-;;
-;; You may change keybindings. See "phi-search-keybindings".
 
 ;; When you call "phi-search" with an active region, the region substring is
 ;; used as the default query. Orelse, if mark is active but no region there,
 ;; mark stays active until search ends. So you may use this command to
 ;; expand region.
+
+;; Variables you may customize are :
+;;
+;; o phi-search-keybindings
+;; o phi-search-limit
+
+;; Faces you may customize are :
+;;
+;; o phi-search-match-face
+;; o phi-search-selection-face
 
 ;; note :
 ;; Currently, this command is compatible with multiple-cursors, unlike
@@ -73,12 +81,37 @@
 ;;       added phi-search-complete-and-xxxx commands
 ;; 1.0.2 fixed phi-search-complete-and-xxxx commands
 ;;       better compatibility for multiple-cursors
+;; 1.0.3 fixed bug that nurumacs does not work while inserting query
+;;       changed mode-line-format
 
 ;;; Code:
 
 ;; * constante
 
 (defconst phi-search-version "1.0.2")
+
+;; * customizable variables, faces
+
+(defvar phi-search-limit 1000
+  "maximum number of accepted matches")
+
+(defvar phi-search-keybindings
+  `((,(kbd "C-s") . phi-search-again-or-next)
+    (,(kbd "C-r") . phi-search-again-or-previous)
+    (,(kbd "C-g") . phi-search-abort)
+    (,(kbd "C-n") . phi-search-complete-and-next-line)
+    (,(kbd "C-p") . phi-search-complete-and-previous-line)
+    (,(kbd "C-f") . phi-search-complete-and-forward-char)
+    (,(kbd "RET") . phi-search-complete))
+  "keybindings used in phi-search prompt")
+
+(make-face 'phi-search-match-face)
+(set-face-attribute 'phi-search-match-face nil
+                    :background "#194854")
+
+(make-face 'phi-search-selection-face)
+(set-face-attribute 'phi-search-selection-face nil
+                    :background "#594854")
 
 ;; * utilities
 
@@ -113,9 +146,6 @@
 
 ;; variables
 
-(defvar phi-search-limit 1000
-  "maximum number of accepted matches")
-
 (defvar phi-search--overlays nil
   "overlays currently active in this target window. is ordered.")
 (make-variable-buffer-local 'phi-search--overlays)
@@ -141,16 +171,6 @@ this value must be nil, if nothing is matched.")
   "stores the last query")
 (make-variable-buffer-local 'phi-search--last-executed)
 
-;; faces
-
-(make-face 'phi-search-match-face)
-(set-face-attribute 'phi-search-match-face nil
-                    :background "#194854")
-
-(make-face 'phi-search-selection-face)
-(set-face-attribute 'phi-search-selection-face nil
-                    :background "#594854")
-
 ;; functions
 
 (defun phi-search--delete-overlays ()
@@ -170,12 +190,17 @@ this value must be nil, if nothing is matched.")
     (phi-search--make-overlays-for-1 query nil)
     (setq phi-search--offset (- (length phi-search--overlays)
                                 phi-search--offset)))
-  (when (zerop (length phi-search--overlays))
-    (message "no matches"))
-  (when (>= (length phi-search--overlays) phi-search-limit)
-    (message "more than %d matches" phi-search-limit)
-    (phi-search--delete-overlays))
-  (setq phi-search--selection nil))
+  (let ((num (length phi-search--overlays)))
+    (cond ((zerop num)
+           (message "no matches")
+           (setq phi-search--selection nil))
+          ((>= num phi-search-limit)
+           (phi-search--delete-overlays)
+           (message "more than %d matches" phi-search-limit))
+          (t
+           (unless (phi-search--select phi-search--offset)
+             (setq phi-search--offset 0)
+             (phi-search--select phi-search--offset))))))
 
 (defun phi-search--make-overlays-for-1 (query limit)
   (while (when (phi-search--search-backward query limit)
@@ -206,6 +231,15 @@ this value must be nil, if nothing is matched.")
   "the target (window . buffer) which this prompt buffer is for")
 (make-variable-buffer-local 'phi-search--target)
 
+(defvar phi-search--mode-line-format
+  '(" *phi-search*"
+    (:eval (let (total selection)
+             (phi-search--with-target-buffer
+              (setq selection phi-search--selection
+                    total (length phi-search--overlays)))
+             (when selection
+               (format " [ %d / %d ]" (1+ selection) total))))))
+
 ;; functions
 
 (defmacro phi-search--with-target-buffer (&rest body)
@@ -223,8 +257,7 @@ this value must be nil, if nothing is matched.")
        (with-selected-window (car target)
          ;; if buffer is switched, switch back to the target
          (unless (eq (current-buffer) (cdr target))
-           (switch-to-buffer (cdr target))
-           (message "phi-search: buffer is switched"))
+           (switch-to-buffer (cdr target)))
          ;; eval body
          ,@body))))
 
@@ -233,29 +266,13 @@ this value must be nil, if nothing is matched.")
   (when phi-search--target
     (let ((query (buffer-string)))
       (phi-search--with-target-buffer
-       (phi-search--delete-overlays)
-       (unless (string= query "")
-         (phi-search--make-overlays-for query)
-         (when phi-search--overlays
-           (unless (phi-search--select phi-search--offset)
-             (setq phi-search--offset 0)
-             (phi-search--select phi-search--offset))
-           (message
-            (format "matched %d items" (length phi-search--overlays)))))))))
+       (phi-search--with-nurumacs
+        (phi-search--delete-overlays)
+        (phi-search--make-overlays-for query))))))
 
 (add-hook 'after-change-functions 'phi-search--update)
 
 ;; * start/end phi-search
-
-(defvar phi-search-keybindings
-  `((,(kbd "C-s") . phi-search-again-or-next)
-    (,(kbd "C-r") . phi-search-again-or-previous)
-    (,(kbd "C-g") . phi-search-abort)
-    (,(kbd "C-n") . phi-search-complete-and-next-line)
-    (,(kbd "C-p") . phi-search-complete-and-previous-line)
-    (,(kbd "C-f") . phi-search-complete-and-forward-char)
-    (,(kbd "RET") . phi-search-complete))
-  "keybindings used in phi-search prompt")
 
 (defun phi-search--initialize ()
   (setq phi-search--original-position (point))
@@ -267,7 +284,8 @@ this value must be nil, if nothing is matched.")
   (let ((target (cons (selected-window) (current-buffer)))
         (str (or phi-search--original-region "")))
     (select-window (split-window-vertically -4))
-    (switch-to-buffer (generate-new-buffer "*phi-prompt*"))
+    (switch-to-buffer (generate-new-buffer "*phi-search*"))
+    (setq mode-line-format phi-search--mode-line-format)
     (setq phi-search--target target)
     (insert str))
   (dolist (kb phi-search-keybindings)
@@ -340,8 +358,8 @@ this value must be nil, if nothing is matched.")
      (error "nothing matched"))
    (phi-search--with-nurumacs
     (unless (phi-search--select (1+ phi-search--selection))
-      (message "no more matches")
-      (phi-search--select 0)))))
+      (phi-search--select 0)
+      (message "no more matches")))))
 
 (defun phi-search-previous ()
   "select previous item."
@@ -351,9 +369,9 @@ this value must be nil, if nothing is matched.")
      (error "nothing matched"))
    (phi-search--with-nurumacs
     (unless (phi-search--select (1- phi-search--selection))
-      (message "no more matches")
       (phi-search--select
-       (1- (length phi-search--overlays)))))))
+       (1- (length phi-search--overlays)))
+      (message "no more matches")))))
 
 (defun phi-search-again-or-next ()
   "search again with the last query, or search next item"
