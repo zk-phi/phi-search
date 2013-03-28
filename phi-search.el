@@ -342,20 +342,26 @@ this value must be nil, if nothing is matched.")
 (defun phi-search-complete-and-next-line ()
   "quit phi-search with next-line"
   (interactive)
-  (phi-search-complete)
-  (call-interactively 'next-line))
+  (condition-case err
+      (call-interactively 'next-line)
+    (error
+     (phi-search-complete)
+     (call-interactively 'next-line))))
 
 (defun phi-search-complete-and-previous-line ()
   "quit phi-search with previous-line"
   (interactive)
-  (phi-search-complete)
-  (call-interactively 'previous-line))
+  (condition-case err
+      (call-interactively 'previous-line)
+    (error
+     (phi-search-complete)
+     (call-interactively 'previous-line))))
 
 (defun phi-search-complete-and-forward-char ()
   "quit phi-search with forward-char"
   (interactive)
   (condition-case err
-      (forward-char)
+      (call-interactively 'forward-char)
     (error
      (phi-search-complete)
      (call-interactively 'forward-char))))
