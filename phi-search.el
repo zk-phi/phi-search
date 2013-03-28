@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.0.1
+;; Version: 1.0.2
 
 ;;; Commentary:
 
@@ -54,8 +54,8 @@
 ;;
 ;; You may change keybindings. See "phi-search-keybindings".
 
-;; When you call "phi-search" with an active region, the substring is used
-;; as the default query. Orelse, if mark is active but no region there,
+;; When you call "phi-search" with an active region, the region substring is
+;; used as the default query. Orelse, if mark is active but no region there,
 ;; mark stays active until search ends. So you may use this command to
 ;; expand region.
 
@@ -71,12 +71,14 @@
 ;; 1.0.0 first released
 ;; 1.0.1 working better with regions
 ;;       added phi-search-complete-and-xxxx commands
+;; 1.0.2 fixed phi-search-complete-and-xxxx commands
+;;       better compatibility for multiple-cursors
 
 ;;; Code:
 
 ;; * constante
 
-(defconst phi-search-version "1.0.1")
+(defconst phi-search-version "1.0.2")
 
 ;; * utilities
 
@@ -121,6 +123,10 @@
 (defvar phi-search--original-position nil
   "stores position when this search started.")
 (make-variable-buffer-local 'phi-search--original-position)
+
+(defvar phi-search--original-region nil
+  "stores region substring when this search started.")
+(make-variable-buffer-local 'phi-search--original-region)
 
 (defvar phi-search--offset nil
   "the first matching item counting from the original position")
@@ -253,18 +259,13 @@ this value must be nil, if nothing is matched.")
 
 (defun phi-search--initialize ()
   (setq phi-search--original-position (point))
+  (when (and (use-region-p)
+             (not (= (region-beginning) (region-end))))
+    (setq phi-search--original-region
+          (buffer-substring (region-beginning) (region-end)))
+    (deactivate-mark))
   (let ((target (cons (selected-window) (current-buffer)))
-        (str (if (or (not mark-active)
-                     (= (region-beginning) (region-end))
-                     ;; (mc/execute-command-for-all-fake-cursors 'deactivate-mark)
-                     ;; does not work. so using region substring is temporarily disabled
-                     ;; for multiple-cursors-mode. because only the region for the real
-                     ;; cursor is deactivated. does anyone fix this ?
-                     (and (boundp 'multiple-cursors-mode) multiple-cursors-mode))
-                 ""
-               (let ((str (buffer-substring (region-beginning) (region-end))))
-                (deactivate-mark)
-                str))))
+        (str (or phi-search--original-region "")))
     (select-window (split-window-vertically -4))
     (switch-to-buffer (generate-new-buffer "*phi-prompt*"))
     (setq phi-search--target target)
@@ -279,7 +280,50 @@ this value must be nil, if nothing is matched.")
     (delete-window (selected-window))
     (select-window wnd)
     (setq phi-search--original-position nil
+          phi-search--original-region nil
           phi-search--last-executed str)))
+
+;; * generate repeatable commands
+
+(defvar phi-search--region-query nil
+  "store query for do-search-with-region again")
+(make-variable-buffer-local 'phi-search--region-query)
+
+(defun phi-search--command-do-nothing ()
+  '(lambda ()
+     (interactive)
+     nil))
+
+(defun phi-search--command-do-search (query n &optional cmd use-region)
+  ;; phi-search--region-query must be cursor-local
+  (when (boundp 'mc/cursor-specific-vars)
+    (add-to-list 'mc/cursor-specific-vars 'phi-search--region-query))
+  ;; generate command
+  (let* ((forward (>= n 0))
+         (times
+          (if forward (1+ n) (abs n)))
+         (before
+          (when use-region
+            '(progn (setq phi-search--region-query
+                          (buffer-substring (region-beginning) (region-end)))
+                    (deactivate-mark))))
+         (search-command
+          (if forward 'phi-search--search-forward 'phi-search--search-backward))
+         (query
+          (if use-region 'phi-search--region-query query))
+         (fallback
+          (if forward '(goto-char (point-min)) '(goto-char (point-max))))
+         (after
+          `(progn ,(if forward '(goto-char (match-beginning 0)))
+                  ,(if cmd `(call-interactively (quote ,cmd))))))
+    `(lambda ()
+       (interactive)
+       ,before
+       (dotimes (n ,times)
+         (unless (,search-command ,query nil)
+           ,fallback
+           (,search-command ,query nil)))
+       ,after)))
 
 ;; * interactive commands
 
@@ -339,14 +383,39 @@ this value must be nil, if nothing is matched.")
     (phi-search--delete-overlays)))
   (phi-search-complete))
 
+(defun phi-search-complete (&optional cmd)
+  "set repeatable command as \"this-command\" and quit phi-search.
+if optional arg command is non-nil, call command after that."
+  (interactive)
+  (let ((query (buffer-string)))
+    (phi-search--with-target-buffer
+     (let ((command
+            (cond ((null phi-search--selection)
+                   (phi-search--command-do-nothing))
+                  ((string= query phi-search--original-region)
+                   (phi-search--command-do-search
+                    nil (- phi-search--selection phi-search--offset) cmd 'use-region))
+                  (t
+                   (phi-search--command-do-search
+                    query (- phi-search--selection phi-search--offset) cmd)))))
+       (setq this-command command
+             this-original-command command)
+       (when (boundp 'mc--this-command)
+         (setq mc--this-command command)))
+     ;; clear overlays *without moving back cursor*
+     (save-excursion (phi-search--delete-overlays))))
+  (phi-search--clean)
+  (when cmd (call-interactively cmd)))
+
+;; * phi-search-complete-and-xxxx
+
 (defun phi-search-complete-and-next-line ()
   "quit phi-search with next-line"
   (interactive)
   (condition-case err
       (call-interactively 'next-line)
     (error
-     (phi-search-complete)
-     (call-interactively 'next-line))))
+     (phi-search-complete 'next-line))))
 
 (defun phi-search-complete-and-previous-line ()
   "quit phi-search with previous-line"
@@ -354,8 +423,7 @@ this value must be nil, if nothing is matched.")
   (condition-case err
       (call-interactively 'previous-line)
     (error
-     (phi-search-complete)
-     (call-interactively 'previous-line))))
+     (phi-search-complete 'previous-line))))
 
 (defun phi-search-complete-and-forward-char ()
   "quit phi-search with forward-char"
@@ -363,41 +431,7 @@ this value must be nil, if nothing is matched.")
   (condition-case err
       (call-interactively 'forward-char)
     (error
-     (phi-search-complete)
-     (call-interactively 'forward-char))))
-
-(defun phi-search-complete ()
-  "set repeatable command as \"this-command\" and quit phi-search.
-if optional arg command is non-nil, call command after that."
-  (interactive)
-  (let ((query (buffer-string)))
-    (phi-search--with-target-buffer
-     ;; generate a repeatable command and set as "this-command"
-     (let (command)
-       (if (null phi-search--selection)
-           ;; if nothing is selected, generate a command that do nothing
-           (setq command `(lambda ()
-                            (interactive)
-                            nil))
-         ;; otherwise, generate a command that jumps N items backward/forward
-         (let ((n (- phi-search--selection phi-search--offset)))
-           (setq command `(lambda ()
-                            (interactive)
-                            (dotimes (n ,(if (< n 0) (abs n) (1+ n)))
-                              (unless (,(if (< n 0) 'phi-search--search-backward
-                                          'phi-search--search-forward) ,query nil)
-                                (goto-char ,(if (< n 0) '(point-max) '(point-min)))
-                                (,(if (< n 0) 'phi-search--search-backward
-                                    'phi-search--search-forward) ,query nil)))
-                            ,(when (>= n 0) '(goto-char (match-beginning 0)))))))
-       ;; behave as if this command is "the" command
-       (setq this-command command
-             this-original-command command)
-       (when (boundp 'mc--this-command)
-         (setq mc--this-command command)))
-     ;; clear overlays without moving back cursor
-     (save-excursion (phi-search--delete-overlays))))
-  (phi-search--clean))
+     (phi-search-complete 'forward-char))))
 
 ;; * provide
 
