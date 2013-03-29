@@ -83,10 +83,11 @@
 ;;       better compatibility for multiple-cursors
 ;; 1.0.3 fixed bug that nurumacs does not work while inserting query
 ;;       changed mode-line-format
+;;       renamed some private functions
 
 ;;; Code:
 
-;; * constante
+;; * constants
 
 (defconst phi-search-version "1.0.3")
 
@@ -99,9 +100,9 @@
   `((,(kbd "C-s") . phi-search-again-or-next)
     (,(kbd "C-r") . phi-search-again-or-previous)
     (,(kbd "C-g") . phi-search-abort)
-    (,(kbd "C-n") . phi-search-complete-and-next-line)
-    (,(kbd "C-p") . phi-search-complete-and-previous-line)
-    (,(kbd "C-f") . phi-search-complete-and-forward-char)
+    (,(kbd "C-n") . phi-search-maybe-next-line)
+    (,(kbd "C-p") . phi-search-maybe-previous-line)
+    (,(kbd "C-f") . phi-search-maybe-forward-char)
     (,(kbd "RET") . phi-search-complete))
   "keybindings used in phi-search prompt")
 
@@ -425,9 +426,9 @@ if optional arg command is non-nil, call command after that."
   (phi-search--clean)
   (when cmd (call-interactively cmd)))
 
-;; * phi-search-complete-and-xxxx
+;; * phi-search-maybe-xxxx
 
-(defun phi-search-complete-and-next-line ()
+(defun phi-search-maybe-next-line ()
   "quit phi-search with next-line"
   (interactive)
   (condition-case err
@@ -435,7 +436,7 @@ if optional arg command is non-nil, call command after that."
     (error
      (phi-search-complete 'next-line))))
 
-(defun phi-search-complete-and-previous-line ()
+(defun phi-search-maybe-previous-line ()
   "quit phi-search with previous-line"
   (interactive)
   (condition-case err
@@ -443,7 +444,7 @@ if optional arg command is non-nil, call command after that."
     (error
      (phi-search-complete 'previous-line))))
 
-(defun phi-search-complete-and-forward-char ()
+(defun phi-search-maybe-forward-char ()
   "quit phi-search with forward-char"
   (interactive)
   (condition-case err
