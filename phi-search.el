@@ -88,7 +88,7 @@
 
 ;; * constante
 
-(defconst phi-search-version "1.0.2")
+(defconst phi-search-version "1.0.3")
 
 ;; * customizable variables, faces
 
