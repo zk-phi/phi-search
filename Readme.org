@@ -1,0 +1,124 @@
+* phi-search.el
+
+multiple-cursors.el対応の劣化isearch
+
+inferior isearch compatible with "multiple-cursors"
+
+** Screencast
+
+[[screencast.gif]]
+
+** Usage
+
+Require this script
+
+: (require 'phi-search)
+
+then a command "phi-search" is available. You may bind a key to the
+command.
+
+: (global-set-key (kbd "C-s") 'phi-search)
+
+When the command is called, a small window appears at the bottom of
+the current window. Input query there in (emacs) regular expression to
+start searching. In the window, following commands are available.
+
+- [C-s] phi-search-again-or-next
+
+  Move to the next matching item. If query is blank, use the last
+  query.
+
+- [C-r] phi-search-again-or-previous
+
+  Similar to phi-search-again-or-next, but move to the previous item.
+
+- [RET] phi-search-complete
+
+  Finish searching.
+
+- [C-g] phi-search-abort
+
+  Finish searching, and move back to the original position.
+
+** Working with Regions
+
+(in following examples, assume "[" as mark, and "|" as point)
+
+When phi-search is called with an active region, then the substring is
+used as the default query.
+
+: [region| another region   |region another region   region another |region
+: _______________________   ______________________   ______________________
+:                           query: region            query: region
+
+Or, if phi-search mark is active but no region there, mark stays
+active until phi-search ends. So you may use this command to expand
+region.
+
+: [|mark me !   [|mark me !   [mark |me !
+: ___________   ___________   ___________
+:               query:        query: me
+
+** Working with multiple-cursors.el
+
+phi-search is available even when multiple-cursors-mode is
+active. Here are some examples.
+
+: |foo bar baz   |foo bar baz   foo bar |baz
+: |foo bar baz   |foo bar baz   foo bar |baz
+: ____________   ____________   ____________
+:                query:         query: baz
+
+: [|mark us !                 [|mark us !                 [mark |us !
+: [|mark us with a region !   [|mark us with a region !   [mark |us with a region !
+: _________________________   _________________________   _________________________
+:                             query:                      query: us
+
+: [foo| ABC foo       [foo| ABC foo       foo ABC |foo
+: [bar| EFGHIJK bar   [bar| EFGHIJK bar   bar EFGHIJK |bar
+: _________________   _________________   ________________
+:                     query: foo          query: foo
+
+*** How This Works with multiple-cursors ?
+
+multiple-cursors will repeat commands with fake cursors, in
+post-command-hook. The command "phi-search" will open a new buffer
+named *phi-search* to read a query. So post-command-hook for
+"phi-search" runs in *phi-search* buffer. Currently, multiple-cursors
+works buffer locally. Therefore, even when multiple-cursrors-mode is
+enabled, *phi-search* buffer is not affected.
+
+When "phi-search-complete" is called, phi-search will generate a
+command that is repeatable for fake cursors, and set the command to
+"this-original-command" and "mc--this-command". Then go back to the
+buffer where phi-search is called from. post-command-hook for
+"phi-search-complete" runs here, and the generated command will be
+repeated with fake cursors. Because, seen from multiple-cursors,
+"this-command" is the command.
+
+** Customization
+
+You may change keybindings by changing "phi-search-keybindings", and
+limit of search by "phi-search-limit".
+
+: (setq phi-search-keybindings
+:       (append '(("<" . phi-search-again-or-previous)
+:                 (">" . phi-search-again-or-next))
+:               phi-search-keybindings))
+:
+: (setq phi-search-limit 500)
+
+Matching items are propertized with "phi-search-match-face", and the
+selected item is propertized with "phi-search-selection-face". If they
+look not pretty in your colorscheme, you may modify them.
+
+: (set-face-attribute 'phi-search-selection-face nil
+:                     :background "orange")
+
+** Notes
+
+This command uses multiple-cursors variables and behavior, that are
+not documented. Therefore, after you update multiple-cursors, it is
+good idea to test if this command works still correctly, before you
+use this command actually.
+
