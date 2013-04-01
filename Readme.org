@@ -4,6 +4,12 @@ multiple-cursors.el対応の劣化isearch
 
 inferior isearch compatible with "multiple-cursors"
 
+** THE VERSION 1.1.0 BROKE BACKWARD COMPATIBILITY
+
+"phi-search-keybindings" is now removed and, "phi-search-mode-map" is
+available instead. To change keybindings, DO NOT use
+"phi-search-keybindings" but USE "phi-search-mode-map".
+
 ** Screencast
 
 [[screencast.gif]]
@@ -51,9 +57,9 @@ used as the default query.
 : _______________________   ______________________   ______________________
 :                           query: region            query: region
 
-Or, if phi-search mark is active but no region there, mark stays
-active until phi-search ends. So you may use this command to expand
-region.
+Or, if phi-search is called with an active mark but no region there,
+mark stays active until phi-search ends. So you may use this command
+to expand region.
 
 : [|mark me !   [|mark me !   [mark |me !
 : ___________   ___________   ___________
@@ -74,37 +80,40 @@ active. Here are some examples.
 : _________________________   _________________________   _________________________
 :                             query:                      query: us
 
-: [foo| ABC foo       [foo| ABC foo       foo ABC |foo
-: [bar| EFGHIJK bar   [bar| EFGHIJK bar   bar EFGHIJK |bar
-: _________________   _________________   ________________
-:                     query: foo          query: foo
+: [foo| ABC foo       |foo ABC foo       foo ABC |foo
+: [bar| EFGHIJK bar   |bar EFGHIJK bar   bar EFGHIJK |bar
+: _________________   ________________   ________________
+:                     query: foo         query: foo
 
 *** How This Works with multiple-cursors ?
 
-multiple-cursors will repeat commands with fake cursors, in
-post-command-hook. The command "phi-search" will open a new buffer
-named *phi-search* to read a query. So post-command-hook for
-"phi-search" runs in *phi-search* buffer. Currently, multiple-cursors
+"multiple-cursors" will repeat commands with fake cursors, in
+"post-command-hook". The command "phi-search" will open a new buffer
+named *phi-search* to read a query. So "post-command-hook" for the
+command runs in *phi-search* buffer. Currently, "multiple-cursors"
 works buffer locally. Therefore, even when multiple-cursrors-mode is
 enabled, *phi-search* buffer is not affected.
 
 When "phi-search-complete" is called, phi-search will generate a
 command that is repeatable for fake cursors, and set the command to
 "this-original-command" and "mc--this-command". Then go back to the
-buffer where phi-search is called from. post-command-hook for
-"phi-search-complete" runs here, and the generated command will be
-repeated with fake cursors. Because, seen from multiple-cursors,
-"this-command" is the command.
+buffer where phi-search is called from. "post-command-hook" for the
+command runs here, and the generated command will be repeated with
+fake cursors instead.
+
+Seen from "multiple-cursors", whole search
+
+: "phi-search" -> input query -> select an item -> "phi-search-complete"
+
+is the generated command.
 
 ** Customization
 
-You may change keybindings by changing "phi-search-keybindings", and
+You may change keybindings by changing "phi-search-mode-map", and
 limit of search by "phi-search-limit".
 
-: (setq phi-search-keybindings
-:       (append '(("<" . phi-search-again-or-previous)
-:                 (">" . phi-search-again-or-next))
-:               phi-search-keybindings))
+: (define-key phi-search-mode-map (kbd "<") 'phi-search-again-or-previous)
+: (define-key phi-search-mode-map (kbd ">") 'phi-search-again-or-next)
 :
 : (setq phi-search-limit 500)
 
@@ -117,8 +126,8 @@ look not pretty in your colorscheme, you may modify them.
 
 ** Notes
 
-This command uses multiple-cursors variables and behavior, that are
-not documented. Therefore, after you update multiple-cursors, it is
+This command uses "multiple-cursors" variables and behavior that are
+not documented. Therefore, after you update "multiple-cursors", it is
 good idea to test if this command works still correctly, before you
 use this command actually.
 
