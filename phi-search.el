@@ -1,4 +1,4 @@
-;;; phi-search.el --- inferior isearch compatible with "multiple-cursors"
+;;; phi-search.el --- another incremental search command, compatible with "multiple-cursors"
 
 ;; Copyright (C) 2013 zk_phi
 
@@ -30,46 +30,26 @@
 ;;
 ;;   (global-set-key (kbd "C-s") 'phi-search)
 
-;; When the command is called, a small window appears at the bottom of
-;; the current window. Insert query there in regular expression, to start
-;; searching. While searching, following keybindings are available :
+;; In *phi-search* buffer, following commands are available.
 ;;
-;; o [C-s] 'phi-search-again-or-next
+;; - [C-s] phi-search-again-or-next
 ;;
-;;   If query is blank, use the last query and start searching. Otherwise,
-;;   move to the next match.
+;;   Move to the next matching item. If query is blank, use the last
+;;   query.
 ;;
-;; o [C-r] 'phi-search-again-or-previous
+;; - [C-r] phi-search-again-or-previous
 ;;
-;;   If query is blank, use the last query and start searching. Otherwise,
-;;   move to the previous match.
+;;   Similar to phi-search-again-or-next, but move to the previous item.
 ;;
-;; o [RET] 'phi-search-complete
+;; - [RET] phi-search-complete
 ;;
-;;   Finish search.
+;;   Finish searching.
 ;;
-;; o [C-g] 'phi-search-abort
+;; - [C-g] phi-search-abort
 ;;
-;;   Abort search and back to the original position.
+;;   Finish searching, and move back to the original position.
 
-;; When you call "phi-search" with an active region, the region substring is
-;; used as the default query. Orelse, if mark is active but no region there,
-;; mark stays active until search ends. So you may use this command to
-;; expand region.
-
-;; Customization :
-;;
-;; o phi-search-limit
-;; o phi-search-mode-map
-;; o phi-search-match-face
-;; o phi-search-selection-face
-
-;; note :
-;; Currently, this command is compatible with multiple-cursors, unlike
-;; isearch. But, this command uses multiple-cursors variables and behavior
-;; that are not documented. Therefore, after you update multiple-cursors,
-;; it is good idea to test if this command works correctly before you use
-;; this command actually.
+;; For more details, see "Readme".
 
 ;;; Change Log:
 
@@ -84,7 +64,6 @@
 ;; 1.1.0 cleaned-up
 ;;       removed "phi-search-keybindings" and added "phi-search-mode-map"
 ;;       now calls "isearch" if the window is popwin window
-
 
 ;;; Code:
 
@@ -382,7 +361,7 @@ returns the position of the item, or nil for failure."
   (interactive)
   (if (and (boundp 'popwin:popup-window)
            (eq (selected-window) popwin:popup-window))
-      (isearch-forward-regexp)
+      (call-interactively 'isearch-forward-regexp)
     (phi-search--initialize)))
 
 (defun phi-search-again-or-next ()

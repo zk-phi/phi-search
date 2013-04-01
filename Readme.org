@@ -1,8 +1,8 @@
 * phi-search.el
 
-multiple-cursors.el対応の劣化isearch
+multiple-cursors.el対応のインクリメンタルサーチ
 
-inferior isearch compatible with "multiple-cursors"
+another incremental search command, compatible with "multiple-cursors"
 
 ** THE VERSION 1.1.0 BROKE BACKWARD COMPATIBILITY
 
@@ -12,7 +12,7 @@ available instead. To change keybindings, DO NOT use
 
 ** Screencast
 
-[[screencast.gif]]
+[[img/search.gif]]
 
 ** Usage
 
@@ -99,13 +99,8 @@ command that is repeatable for fake cursors, and set the command to
 "this-original-command" and "mc--this-command". Then go back to the
 buffer where phi-search is called from. "post-command-hook" for the
 command runs here, and the generated command will be repeated with
-fake cursors instead.
-
-Seen from "multiple-cursors", whole search
-
-: "phi-search" -> input query -> select an item -> "phi-search-complete"
-
-is the generated command.
+fake cursors instead. Because seen from multiple-cursors, this command
+is "the" command.
 
 ** Customization
 
@@ -114,7 +109,7 @@ limit of search by "phi-search-limit".
 
 : (define-key phi-search-mode-map (kbd "<") 'phi-search-again-or-previous)
 : (define-key phi-search-mode-map (kbd ">") 'phi-search-again-or-next)
-:
+
 : (setq phi-search-limit 500)
 
 Matching items are propertized with "phi-search-match-face", and the
@@ -123,6 +118,52 @@ look not pretty in your colorscheme, you may modify them.
 
 : (set-face-attribute 'phi-search-selection-face nil
 :                     :background "orange")
+
+** phi-replace.el
+
+"phi-replace" and "phi-replace-query" in "phi-replace.el" are
+interactive replace commands, that use the same interface as
+"phi-search".
+
+They have advantages in checking candidates before actually execute
+replace.
+
+[[img/replace.gif]]
+
+To use these commands, require
+
+: (requre 'phi-replace)
+
+and bind a key.
+
+: (global-set-key (kbd "M-%") 'phi-replace-query)
+
+In the *phi-replace* buffer, following commands are available.
+
+- [C-v] phi-replace-scroll-down
+
+  Scroll the target window down, to check candidates.
+
+- [M-v] phi-replace-scroll-up
+
+  Scroll the target window up.
+
+- [RET] phi-replace-complete
+
+  Execute replace. If query is blank, use the last query.
+
+- [C-g] phi-search-abort
+
+  Quit phi-replace without executing.
+
+** Known Bugs and Limitations
+
+- popwin.el compatibility
+
+  Because "phi-search" command creates a new window, it is not
+  available in the singleton pop-up window (which "popwin.el"
+  creates). Therefore, if the selected window is pop-up window,
+  "phi-search" command will call "isearch-forward" instead.
 
 ** Notes
 
