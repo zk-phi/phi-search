@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.0.0
+;; Version: 1.0.1
 
 ;;; Commentary:
 
@@ -53,12 +53,13 @@
 ;;; Change Log:
 
 ;; 1.0.0 first released
+;; 1.0.1 added weight for phi-replace
 
 ;;; Code:
 
 (require 'phi-search)
 
-(defconst phi-replace-version "1.0.0")
+(defconst phi-replace-version "1.0.1")
 
 (defvar phi-replace-mode-map
   (let ((map (make-sparse-keymap)))
@@ -69,13 +70,16 @@
     map)
   "keymap for the phi-search prompt buffers")
 
-;; target buffer
+(defvar phi-replace-weight 0.02
+  "weight for \"phi-replace\"")
+
+;; * target buffer
 
 (defvar phi-replace--last-executed nil
   "stores the last query")
 (make-variable-buffer-local 'phi-replace--last-executed)
 
-;; prompt buffer
+;; * prompt buffer
 
 (defvar phi-replace-mode nil
   "minor mode for phi-replace prompt buffer")
@@ -101,7 +105,7 @@
 
 (add-hook 'after-change-functions 'phi-replace--update)
 
-;; start / end
+;; * start / end
 
 (defun phi-replace--initialize (&optional mode)
   ;; store point
@@ -132,7 +136,9 @@
           phi-search--overlays nil
           phi-replace--last-executed str)))
 
-;; commands
+;; * execute replace
+
+;; * commands
 
 (defun phi-replace ()
   "replace command using phi-search"
@@ -165,12 +171,15 @@
                                        (1+ phi-search--original-position)))
        (if force
            ;; replace all
-           (dolist (ov phi-search--overlays)
+           (dotimes (n (length phi-search--overlays))
              (phi-search--with-nurumacs
-              (goto-char (overlay-start ov)))
-             (delete-region (overlay-start ov)
-                            (overlay-end ov))
-             (insert str))
+              (phi-search--select n))
+             (sit-for phi-replace-weight)
+             (let ((ov (nth n phi-search--overlays)))
+               (goto-char (overlay-start ov))
+               (delete-region (overlay-start ov)
+                              (overlay-end ov))
+               (insert str)))
          ;; query replace
          (dotimes (n (length phi-search--overlays))
            (phi-search--with-nurumacs
