@@ -64,12 +64,13 @@
 ;; 1.1.0 cleaned-up
 ;;       removed "phi-search-keybindings" and added "phi-search-mode-map"
 ;;       now calls "isearch" if the window is popwin window
+;; 1.1.1 use "sublimity" not "nurumacs"
 
 ;;; Code:
 
 ;; * constants
 
-(defconst phi-search-version "1.1.0")
+(defconst phi-search-version "1.1.1")
 
 ;; * customizable vars, maps, faces
 
@@ -116,13 +117,13 @@
         (forward-char 1)
         (phi-search--search-forward query limit)))))
 
-(defmacro phi-search--with-nurumacs (&rest body)
-  "if nurumacs is installed, use it"
-  `(if (boundp 'nurumacs-version)
+(defmacro phi-search--with-sublimity (&rest body)
+  "if sublimity is installed, use it"
+  `(if (boundp 'sublimity-scroll-version)
        (progn
-         (nurumacs--pre-command-function)
+         (sublimity--pre-command)
          ,@body
-         (nurumacs--post-command-function))
+         (sublimity--post-command))
      ,@body))
 
 ;; * private functions for TARGET buffer
@@ -256,7 +257,7 @@ returns the position of the item, or nil for failure."
   (phi-search--with-target-buffer
    (when (null phi-search--selection)
      (error "nothing matched"))
-   (phi-search--with-nurumacs
+   (phi-search--with-sublimity
     (unless (phi-search--select (1+ phi-search--selection))
       (phi-search--select 0)
       (message "no more matches")))))
@@ -266,7 +267,7 @@ returns the position of the item, or nil for failure."
   (phi-search--with-target-buffer
    (when (null phi-search--selection)
      (error "nothing matched"))
-   (phi-search--with-nurumacs
+   (phi-search--with-sublimity
     (unless (phi-search--select (1- phi-search--selection))
       (phi-search--select
        (1- (length phi-search--overlays)))
@@ -276,7 +277,7 @@ returns the position of the item, or nil for failure."
   "update overlays for the target buffer"
   (when phi-search-mode
     (phi-search--with-target-buffer
-     (phi-search--with-nurumacs
+     (phi-search--with-sublimity
       (phi-search--delete-overlays)
       (phi-search--make-overlays-for query)
       ;; try to select the first item
@@ -386,7 +387,7 @@ returns the position of the item, or nil for failure."
   "abort phi-search"
   (interactive)
   (phi-search--with-target-buffer
-   (phi-search--with-nurumacs
+   (phi-search--with-sublimity
     (phi-search--delete-overlays)))
   (phi-search-complete))
 

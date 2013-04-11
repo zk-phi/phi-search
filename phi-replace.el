@@ -54,12 +54,12 @@
 
 ;; 1.0.0 first released
 ;; 1.0.1 added weight for phi-replace
+;; 1.0.2 use "sublimity" not "nurumacs"
 
 ;;; Code:
 
 (require 'phi-search)
-
-(defconst phi-replace-version "1.0.1")
+(defconst phi-replace-version "1.0.2")
 
 (defvar phi-replace-mode-map
   (let ((map (make-sparse-keymap)))
@@ -97,7 +97,7 @@
   "update overlays for the target buffer"
   (when phi-replace-mode
     (phi-search--with-target-buffer
-     (phi-search--with-nurumacs
+     (phi-search--with-sublimity
       (phi-search--delete-overlays)
       (phi-search--make-overlays-for query)
       (when phi-search--overlays
@@ -172,7 +172,7 @@
        (if force
            ;; replace all
            (dotimes (n (length phi-search--overlays))
-             (phi-search--with-nurumacs
+             (phi-search--with-sublimity
               (phi-search--select n))
              (sit-for phi-replace-weight)
              (let ((ov (nth n phi-search--overlays)))
@@ -182,7 +182,7 @@
                (insert str)))
          ;; query replace
          (dotimes (n (length phi-search--overlays))
-           (phi-search--with-nurumacs
+           (phi-search--with-sublimity
             (phi-search--select n))
            (let ((ov (nth n phi-search--overlays)))
              (when (y-or-n-p (format "replace with %s ? " str))
@@ -191,7 +191,7 @@
                               (overlay-end ov))
                (insert str))))))
      ;; clear overlays and back to the original position
-     (phi-search--with-nurumacs
+     (phi-search--with-sublimity
       (phi-search--delete-overlays)
       (goto-char (overlay-start orig-cursor)))))
   (phi-search--clean))
@@ -199,13 +199,13 @@
 (defun phi-replace-scroll-down ()
   (interactive)
   (phi-search--with-target-buffer
-   (phi-search--with-nurumacs
+   (phi-search--with-sublimity
     (call-interactively 'scroll-down))))
 
 (defun phi-replace-scroll-up ()
   (interactive)
   (phi-search--with-target-buffer
-   (phi-search--with-nurumacs
+   (phi-search--with-sublimity
     (call-interactively 'scroll-up))))
 
 ;; provide
