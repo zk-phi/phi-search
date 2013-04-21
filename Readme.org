@@ -20,10 +20,11 @@ Require this script
 
 : (require 'phi-search)
 
-then a command "phi-search" is available. You may bind a key to the
-command.
+then command "phi-search" and "phi-search-backward" are available. You
+may bind a key to the command.
 
 : (global-set-key (kbd "C-s") 'phi-search)
+: (global-set-key (kbd "C-r") 'phi-search-backward)
 
 When the command is called, a small window appears at the bottom of
 the current window. Input query there in (emacs) regular expression to

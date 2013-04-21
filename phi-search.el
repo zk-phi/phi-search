@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.1.0
+;; Version: 1.1.2
 
 ;;; Commentary:
 
@@ -65,12 +65,13 @@
 ;;       removed "phi-search-keybindings" and added "phi-search-mode-map"
 ;;       now calls "isearch" if the window is popwin window
 ;; 1.1.1 use "sublimity" not "nurumacs"
+;; 1.1.2 added phi-search-backward command
 
 ;;; Code:
 
 ;; * constants
 
-(defconst phi-search-version "1.1.1")
+(defconst phi-search-version "1.1.2")
 
 ;; * customizable vars, maps, faces
 
@@ -210,6 +211,10 @@ returns the position of the item, or nil for failure."
   "minor mode for phi-search prompt buffer")
 (make-variable-buffer-local 'phi-search-mode)
 
+(defvar phi-search--direction nil
+  "non-nil iff backward")
+(make-variable-buffer-local 'phi-search--direction)
+
 (add-to-list 'minor-mode-alist '(phi-search-mode " Phi"))
 (add-to-list 'minor-mode-map-alist `(phi-search-mode . ,phi-search-mode-map))
 
@@ -232,7 +237,7 @@ returns the position of the item, or nil for failure."
 
 (defmacro phi-search--with-target-buffer (&rest body)
   "eval body with the target buffer selected.
-\"target\" and \"query\" are brought"
+\"backward\", \"target\" and \"query\" are brought"
   `(progn
      ;; assert that window and buffer live
      (cond ((null phi-search--target)
@@ -243,7 +248,8 @@ returns the position of the item, or nil for failure."
             (error "phi-search: target buffer is killed")))
      ;; select the target window, binding variables for the prompt buffer
      (let ((target phi-search--target)
-           (query (buffer-string)))
+           (query (buffer-string))
+           (backward phi-search--direction))
        (with-selected-window (car target)
          ;; if buffer is switched, switch back to the target
          (unless (eq (current-buffer) (cdr target))
@@ -281,7 +287,10 @@ returns the position of the item, or nil for failure."
       (phi-search--delete-overlays)
       (phi-search--make-overlays-for query)
       ;; try to select the first item
-      (phi-search--select 0)))))
+      (phi-search--select
+       (if backward
+           (1- (length phi-search--overlays))
+         0))))))
 
 (add-hook 'after-change-functions 'phi-search--update)
 
@@ -364,6 +373,13 @@ returns the position of the item, or nil for failure."
            (eq (selected-window) popwin:popup-window))
       (call-interactively 'isearch-forward-regexp)
     (phi-search--initialize)))
+
+(defun phi-search-backward ()
+  "incremental search command compatible with \"multiple-cursors\""
+  (interactive)
+  (let ((phi-search--direction t))
+    (phi-search)
+    (setq phi-search--direction t)))
 
 (defun phi-search-again-or-next ()
   "search again with the last query, or search next item"
