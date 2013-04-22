@@ -73,12 +73,17 @@
 
 (defconst phi-search-version "1.1.2")
 
-;; * customizable vars, maps, faces
+;; * customs
 
-(defvar phi-search-limit 1000
-  "maximum number of accepted matches")
+(defgroup phi-search nil
+  "another incremental search command, compatible with \"multiple-cursors\""
+  :group 'emacs)
 
-(defvar phi-search-mode-map
+(defcustom phi-search-limit 1000
+  "maximum number of accepted matches"
+  :group 'phi-search)
+
+(defcustom phi-search-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-s") 'phi-search-again-or-next)
     (define-key map (kbd "C-r") 'phi-search-again-or-previous)
@@ -88,7 +93,10 @@
     (define-key map (kbd "C-f") 'phi-search-maybe-forward-char)
     (define-key map (kbd "RET") 'phi-search-complete)
     map)
-  "keymap for the phi-search prompt buffers")
+  "keymap for the phi-search prompt buffers"
+  :group 'phi-search)
+
+;; * faces
 
 (make-face 'phi-search-match-face)
 (set-face-attribute 'phi-search-match-face nil
