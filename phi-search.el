@@ -374,6 +374,7 @@ returns the position of the item, or nil for failure."
 
 ;; * interactive commands
 
+;;;###autoload
 (defun phi-search ()
   "incremental search command compatible with \"multiple-cursors\""
   (interactive)
@@ -382,6 +383,7 @@ returns the position of the item, or nil for failure."
       (call-interactively 'isearch-forward-regexp)
     (phi-search--initialize)))
 
+;;;###autoload
 (defun phi-search-backward ()
   "incremental search command compatible with \"multiple-cursors\""
   (interactive)
