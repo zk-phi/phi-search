@@ -140,6 +140,7 @@
 
 ;; * commands
 
+;;;###autoload
 (defun phi-replace ()
   "replace command using phi-search"
   (interactive)
