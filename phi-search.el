@@ -219,7 +219,6 @@ returns the position of the item, or nil for failure."
   "minor mode for phi-search prompt buffer"
   :init-value nil
   :global nil
-  :lighter "phiS"
   :map phi-search-mode-map
   (if phi-search-mode
       (add-hook 'after-change-functions 'phi-search--update nil t)

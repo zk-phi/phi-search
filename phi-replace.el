@@ -85,7 +85,6 @@
   "minor mode for phi-replace prompt buffer"
   :init-value nil
   :global nil
-  :lighter "phiR"
   :map phi-replace-mode-map
   (if phi-replace-mode
       (add-hook 'after-change-functions 'phi-replace--update nil t)
