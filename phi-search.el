@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.1.3
+;; Version: 1.1.2
 
 ;;; Commentary:
 
@@ -66,14 +66,12 @@
 ;;       now calls "isearch" if the window is popwin window
 ;; 1.1.1 use "sublimity" not "nurumacs"
 ;; 1.1.2 added phi-search-backward command
-;; 1.1.3 if phi-search is not called interactively (macros for example),
-;;       phi-search-again-or-next will fail if there are no items more
 
 ;;; Code:
 
 ;; * constants
 
-(defconst phi-search-version "1.1.3")
+(defconst phi-search-version "1.1.2")
 
 ;; * customs
 
@@ -270,27 +268,25 @@ returns the position of the item, or nil for failure."
          ;; eval body
          ,@body))))
 
-(defun phi-search-next (&optional noerror)
+(defun phi-search-next ()
   "select next item."
   (phi-search--with-target-buffer
    (when (null phi-search--selection)
      (error "nothing matched"))
    (phi-search--with-sublimity
     (unless (phi-search--select (1+ phi-search--selection))
-      (if (not noerror) (error "no more matches")
-        (phi-search--select 0)
-        (message "no more matches"))))))
+      (phi-search--select 0)
+      (message "no more matches")))))
 
-(defun phi-search-previous (&optional noerror)
+(defun phi-search-previous ()
   "select previous item."
   (phi-search--with-target-buffer
    (when (null phi-search--selection)
      (error "nothing matched"))
    (phi-search--with-sublimity
     (unless (phi-search--select (1- phi-search--selection))
-      (if (not noerror) (error "no more matches")
-        (phi-search--select (1- (length phi-search--overlays)))
-        (message "no more matches"))))))
+      (phi-search--select (1- (length phi-search--overlays)))
+      (message "no more matches")))))
 
 (defun phi-search--update (&rest _)
   "update overlays for the target buffer"
@@ -399,7 +395,7 @@ returns the position of the item, or nil for failure."
   (let ((str (phi-search--with-target-buffer
               phi-search--last-executed)))
     (if (not (string= (buffer-string) ""))
-        (phi-search-next (interactive-p))
+        (phi-search-next)
       (insert str))))
 
 (defun phi-search-again-or-previous ()
@@ -408,7 +404,7 @@ returns the position of the item, or nil for failure."
   (let ((str (phi-search--with-target-buffer
               phi-search--last-executed)))
     (if (not (string= (buffer-string) ""))
-        (phi-search-previous (interactive-p))
+        (phi-search-previous)
       (insert str))))
 
 (defun phi-search-abort ()
