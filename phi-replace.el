@@ -81,12 +81,18 @@
 
 ;; * prompt buffer
 
-(defvar phi-replace-mode nil
-  "minor mode for phi-replace prompt buffer")
-(make-variable-buffer-local 'phi-replace-mode)
+(define-minor-mode phi-replace-mode
+  "minor mode for phi-replace prompt buffer"
+  :init-value nil
+  :global nil
+  :lighter "phiR"
+  :map phi-replace-mode-map
+  (if phi-replace-mode
+      (add-hook 'after-change-functions 'phi-replace--update nil t)
+    (remove-hook 'after-change-functions 'phi-replace--update t)))
 
-(add-to-list 'minor-mode-alist '(phi-replace-mode " Phi"))
-(add-to-list 'minor-mode-map-alist `(phi-replace-mode . ,phi-replace-mode-map))
+(defvar phi-replace--query-mode nil)
+(make-variable-buffer-local 'phi-replace--query-mode)
 
 (defvar phi-replace--mode-line-format
   '(" *phi-replace*"
@@ -95,15 +101,12 @@
 
 (defun phi-replace--update (&rest _)
   "update overlays for the target buffer"
-  (when phi-replace-mode
-    (phi-search--with-target-buffer
-     (phi-search--with-sublimity
-      (phi-search--delete-overlays)
-      (phi-search--make-overlays-for query)
-      (when phi-search--overlays
-        (goto-char (overlay-end (car phi-search--overlays))))))))
-
-(add-hook 'after-change-functions 'phi-replace--update)
+  (phi-search--with-target-buffer
+   (phi-search--with-sublimity
+    (phi-search--delete-overlays)
+    (phi-search--make-overlays-for query)
+    (when phi-search--overlays
+      (goto-char (overlay-end (car phi-search--overlays)))))))
 
 ;; * start / end
 
@@ -118,7 +121,8 @@
   (let ((target (cons (selected-window) (current-buffer))))
     (select-window (split-window-vertically -4))
     (switch-to-buffer (generate-new-buffer "*phi-replace*"))
-    (setq phi-replace-mode (or mode t)
+    (phi-replace-mode 1)
+    (setq phi-replace--query-mode mode
           phi-search--target target
           mode-line-format phi-replace--mode-line-format)))
 
@@ -163,7 +167,7 @@
   ;; if the query is blank, use the last query
   (when (string= (buffer-string) "")
     (insert phi-replace--last-executed))
-  (let ((force (not (equal phi-replace-mode 'query)))
+  (let ((force (not phi-replace--query-mode))
         str orig-cursor)
     (phi-search--with-target-buffer
      (when phi-search--overlays

@@ -215,16 +215,19 @@ returns the position of the item, or nil for failure."
 
 ;; minor mode
 
-(defvar phi-search-mode nil
-  "minor mode for phi-search prompt buffer")
-(make-variable-buffer-local 'phi-search-mode)
+(define-minor-mode phi-search-mode
+  "minor mode for phi-search prompt buffer"
+  :init-value nil
+  :global nil
+  :lighter "phiS"
+  :map phi-search-mode-map
+  (if phi-search-mode
+      (add-hook 'after-change-functions 'phi-search--update nil t)
+    (remove-hook 'after-change-functions 'phi-search--update t)))
 
 (defvar phi-search--direction nil
   "non-nil iff backward")
 (make-variable-buffer-local 'phi-search--direction)
-
-(add-to-list 'minor-mode-alist '(phi-search-mode " Phi"))
-(add-to-list 'minor-mode-map-alist `(phi-search-mode . ,phi-search-mode-map))
 
 ;; variables
 
@@ -289,18 +292,15 @@ returns the position of the item, or nil for failure."
 
 (defun phi-search--update (&rest _)
   "update overlays for the target buffer"
-  (when phi-search-mode
-    (phi-search--with-target-buffer
-     (phi-search--with-sublimity
-      (phi-search--delete-overlays)
-      (phi-search--make-overlays-for query)
-      ;; try to select the first item
-      (phi-search--select
-       (if backward
-           (1- (length phi-search--overlays))
-         0))))))
-
-(add-hook 'after-change-functions 'phi-search--update)
+  (phi-search--with-target-buffer
+   (phi-search--with-sublimity
+    (phi-search--delete-overlays)
+    (phi-search--make-overlays-for query)
+    ;; try to select the first item
+    (phi-search--select
+     (if backward
+         (1- (length phi-search--overlays))
+       0)))))
 
 ;; * start/end phi-search
 
@@ -318,8 +318,8 @@ returns the position of the item, or nil for failure."
         (str (or phi-search--original-region "")))
     (select-window (split-window-vertically -4))
     (switch-to-buffer (generate-new-buffer "*phi-search*"))
-    (setq phi-search-mode t
-          phi-search--target target
+    (phi-search-mode 1)
+    (setq phi-search--target target
           mode-line-format phi-search--mode-line-format)
     (insert str)))
 
