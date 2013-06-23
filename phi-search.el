@@ -130,9 +130,9 @@
   "if sublimity is installed, use it"
   `(if (boundp 'sublimity-scroll-version)
        (progn
-         (sublimity--pre-command-handler)
+         (sublimity--pre-command)
          ,@body
-         (sublimity--post-command-handler))
+         (sublimity--post-command))
      ,@body))
 
 ;; * private functions for TARGET buffer
