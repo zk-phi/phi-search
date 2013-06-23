@@ -130,9 +130,9 @@
   "if sublimity is installed, use it"
   `(if (boundp 'sublimity-scroll-version)
        (progn
-         (sublimity--pre-command)
+         (sublimity--pre-command-handler)
          ,@body
-         (sublimity--post-command))
+         (sublimity--post-command-handler))
      ,@body))
 
 ;; * private functions for TARGET buffer
@@ -163,14 +163,14 @@ this value must be nil, if nothing is matched.")
 ;; functions
 
 (defun phi-search--delete-overlays ()
-  "delete all overlays in this target buffer, and go to the original position"
+  "delete all overlays in THIS target buffer, and go to the original position"
   (mapc 'delete-overlay phi-search--overlays)
   (setq phi-search--overlays nil
         phi-search--selection nil)
   (goto-char phi-search--original-position))
 
 (defun phi-search--make-overlays-for (query)
-  "make overlays for all matching items in this target buffer."
+  "make overlays for all matching items in THIS target buffer."
   (save-excursion
     ;; POINT -> BOF
     (goto-char phi-search--original-position)
@@ -182,12 +182,10 @@ this value must be nil, if nothing is matched.")
     ;; check errors
     (cond ((zerop num)
            (message "no matches")
-           (setq phi-search--selection nil)
-           nil)
+           (setq phi-search--selection nil))
           ((>= num phi-search-limit)
            (message "more than %d matches" phi-search-limit)
-           (phi-search--delete-overlays)
-           nil))))
+           (phi-search--delete-overlays)))))
 
 (defun phi-search--make-overlays-for-1 (query limit)
   (while (when (phi-search--search-backward query limit)
