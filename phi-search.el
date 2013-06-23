@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.1.2
+;; Version: 1.1.3
 
 ;;; Commentary:
 
@@ -66,12 +66,13 @@
 ;;       now calls "isearch" if the window is popwin window
 ;; 1.1.1 use "sublimity" not "nurumacs"
 ;; 1.1.2 added phi-search-backward command
+;; 1.1.3 better integration with sublimity
 
 ;;; Code:
 
 ;; * constants
 
-(defconst phi-search-version "1.1.2")
+(defconst phi-search-version "1.1.3")
 
 ;; * customs
 
@@ -219,7 +220,9 @@ returns the position of the item, or nil for failure."
   :global nil
   :map phi-search-mode-map
   (if phi-search-mode
-      (add-hook 'after-change-functions 'phi-search--update nil t)
+      (progn
+        (add-hook 'after-change-functions 'phi-search--update nil t)
+        (when (fboundp 'sublimity-mode) (sublimity-mode -1)))
     (remove-hook 'after-change-functions 'phi-search--update t)))
 
 (defvar phi-search--direction nil
