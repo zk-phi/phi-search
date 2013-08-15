@@ -107,25 +107,37 @@
 (set-face-attribute 'phi-search-selection-face nil
                     :background "#594854")
 
+;; * variables
+
+(defvar phi-search--last-executed nil
+  "stores the last query")
+(make-variable-buffer-local 'phi-search--last-executed)
+
+(defvar phi-search--target nil
+  "the target (window . buffer) which this prompt buffer is for")
+(make-variable-buffer-local 'phi-search--target)
+
 ;; * utilities
 
-(defun phi-search--search-backward (query limit)
+(defun phi-search--search-backward (query limit &optional inclusive)
   "a handy version of search-backward-regexp"
   (ignore-errors
    (let* ((pos1 (point))
           (pos2 (search-backward-regexp query limit t)))
-     (if (not (and pos2 (= pos1 pos2))) pos2
+     (if (or inclusive
+             (not (and pos2 (= pos1 pos2)))) pos2
        (backward-char 1)
-       (phi-search--search-backward query limit)))))
+       (phi-search--search-backward query limit t)))))
 
-(defun phi-search--search-forward (query limit)
+(defun phi-search--search-forward (query limit &optional inclusive)
   "a handy version of search-forward-regexp"
   (ignore-errors
     (let* ((pos1 (point))
            (pos2 (search-forward-regexp query limit t)))
-      (if (not (and pos2 (= pos1 pos2))) pos2
+      (if (or inclusive
+              (not (and pos2 (= pos1 pos2)))) pos2
         (forward-char 1)
-        (phi-search--search-forward query limit)))))
+        (phi-search--search-forward query limit t)))))
 
 (defmacro phi-search--with-sublimity (&rest body)
   "if sublimity is installed, use it"
@@ -156,10 +168,6 @@
   "stores which item is currently selected.
 this value must be nil, if nothing is matched.")
 (make-variable-buffer-local 'phi-search--selection)
-
-(defvar phi-search--last-executed nil
-  "stores the last query")
-(make-variable-buffer-local 'phi-search--last-executed)
 
 ;; functions
 
@@ -231,10 +239,6 @@ returns the position of the item, or nil for failure."
 
 ;; variables
 
-(defvar phi-search--target nil
-  "the target (window . buffer) which this prompt buffer is for")
-(make-variable-buffer-local 'phi-search--target)
-
 (defvar phi-search--mode-line-format
   '(" *phi-search*"
     (:eval (let (total selection)
@@ -298,7 +302,10 @@ returns the position of the item, or nil for failure."
     ;; try to select the first item
     (phi-search--select
      (if backward
-         (1- (length phi-search--overlays))
+         ;; check if query matches at point with zero width
+         (if (let ((first (car phi-search--overlays)))
+                 (and first (= (overlay-end first) (point)))) 0
+           (1- (length phi-search--overlays)))
        0)))))
 
 ;; * start/end phi-search
@@ -366,9 +373,9 @@ returns the position of the item, or nil for failure."
        (interactive)
        ,pre-process
        (dotimes (n ,(1+ n))
-         (unless (phi-search--search-forward ,query nil)
+         (unless (phi-search--search-forward ,query nil (zerop n))
            (goto-char (point-min))
-           (phi-search--search-forward ,query nil)))
+           (phi-search--search-forward ,query nil t)))
        ,post-process)))
 
 ;; * interactive commands
