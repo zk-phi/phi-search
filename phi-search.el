@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.1.3
+;; Version: 1.1.4
 
 ;;; Commentary:
 
@@ -67,12 +67,13 @@
 ;; 1.1.1 use "sublimity" not "nurumacs"
 ;; 1.1.2 added phi-search-backward command
 ;; 1.1.3 better integration with sublimity
+;; 1.1.4 fixed a bug in adjacent matches
 
 ;;; Code:
 
 ;; * constants
 
-(defconst phi-search-version "1.1.3")
+(defconst phi-search-version "1.1.4")
 
 ;; * customs
 
