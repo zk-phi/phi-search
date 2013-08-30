@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.0.3
+;; Version: 1.0.4
 
 ;;; Commentary:
 
@@ -56,11 +56,12 @@
 ;; 1.0.1 added weight for phi-replace
 ;; 1.0.2 use "sublimity" not "nurumacs"
 ;; 1.0.3 better integration with sublimity
+;; 1.0.4 added a hook
 
 ;;; Code:
 
 (require 'phi-search)
-(defconst phi-replace-version "1.0.3")
+(defconst phi-replace-version "1.0.4")
 
 (defvar phi-replace-mode-map
   (let ((map (make-sparse-keymap)))
@@ -70,6 +71,9 @@
     (define-key map (kbd "RET") 'phi-replace-complete)
     map)
   "keymap for the phi-search prompt buffers")
+
+(defvar phi-replace-mode-hook nil
+  "hook run when entering phi-replace-mode")
 
 (defvar phi-replace-weight 0.02
   "weight for \"phi-replace\"")
@@ -90,6 +94,7 @@
   (if phi-replace-mode
       (progn
        (add-hook 'after-change-functions 'phi-replace--update nil t)
+       (run-hooks 'phi-replace-mode-hook)
        (when (fboundp 'sublimity-mode) (sublimity-mode -1)))
     (remove-hook 'after-change-functions 'phi-replace--update t)))
 

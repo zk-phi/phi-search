@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.1.4
+;; Version: 1.1.5
 
 ;;; Commentary:
 
@@ -68,12 +68,13 @@
 ;; 1.1.2 added phi-search-backward command
 ;; 1.1.3 better integration with sublimity
 ;; 1.1.4 fixed a bug in adjacent matches
+;; 1.1.5 added a hook
 
 ;;; Code:
 
 ;; * constants
 
-(defconst phi-search-version "1.1.4")
+(defconst phi-search-version "1.1.5")
 
 ;; * customs
 
@@ -96,6 +97,10 @@
     (define-key map (kbd "RET") 'phi-search-complete)
     map)
   "keymap for the phi-search prompt buffers"
+  :group 'phi-search)
+
+(defcustom phi-search-mode-hook nil
+  "hook run when entering phi-search-mode"
   :group 'phi-search)
 
 ;; * faces
@@ -231,6 +236,7 @@ returns the position of the item, or nil for failure."
   (if phi-search-mode
       (progn
         (add-hook 'after-change-functions 'phi-search--update nil t)
+        (run-hooks 'phi-search-mode-hook)
         (when (fboundp 'sublimity-mode) (sublimity-mode -1)))
     (remove-hook 'after-change-functions 'phi-search--update t)))
 
