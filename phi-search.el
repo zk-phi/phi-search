@@ -95,6 +95,7 @@
     (define-key map (kbd "C-p") 'phi-search-maybe-previous-line)
     (define-key map (kbd "C-f") 'phi-search-maybe-forward-char)
     (define-key map (kbd "C-l") 'phi-search-recenter-top-bottom)
+    (define-key map (kbd "C-w") 'phi-search-yank-word)
     (define-key map (kbd "RET") 'phi-search-complete)
     map)
   "keymap for the phi-search prompt buffers"
@@ -484,6 +485,22 @@ if optional arg command is non-nil, call it after that."
   (interactive)
   (phi-search--with-target-buffer
    (recenter-top-bottom)))
+
+(defun phi-search-yank-word ()
+  "If there's a region in search buffer, yank from that.
+Otherwise yank from target buffer and expand search string."
+  (interactive)
+  (if (or (not (use-region-p))
+	  (= (region-beginning) (region-end)))
+      (let ((str (phi-search--with-target-buffer
+		  (save-excursion
+		    (let ((start-point (point))
+			  (end-point (progn (forward-word 1) (point))))
+		      (buffer-substring-no-properties
+		       start-point end-point))))))
+	(insert str))
+
+    (kill-region (region-beginning) (region-end))))
 
 ;; * provide
 
