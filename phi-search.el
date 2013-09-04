@@ -94,6 +94,7 @@
     (define-key map (kbd "C-n") 'phi-search-maybe-next-line)
     (define-key map (kbd "C-p") 'phi-search-maybe-previous-line)
     (define-key map (kbd "C-f") 'phi-search-maybe-forward-char)
+    (define-key map (kbd "C-l") 'phi-search-recenter-top-bottom)
     (define-key map (kbd "RET") 'phi-search-complete)
     map)
   "keymap for the phi-search prompt buffers"
@@ -412,6 +413,11 @@ returns the position of the item, or nil for failure."
     (if (not (string= (buffer-string) ""))
         (phi-search-next)
       (insert str))))
+
+(defun phi-search-recenter-top-bottom ()
+  (interactive)
+  (phi-search--with-target-buffer
+   (recenter-top-bottom)))
 
 (defun phi-search-again-or-previous ()
   "search again with the last query, or search previous item"
