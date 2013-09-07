@@ -140,16 +140,6 @@
 (set-face-attribute 'phi-search-selection-face nil
                     :background "#594854")
 
-;; * variables
-
-(defvar phi-search--last-executed nil
-  "stores the last query")
-(make-variable-buffer-local 'phi-search--last-executed)
-
-(defvar phi-search--target nil
-  "the target (window . buffer) which this prompt buffer is for")
-(make-variable-buffer-local 'phi-search--target)
-
 ;; * utilities
 
 (defun phi-search--search-backward (query limit &optional inclusive)
@@ -186,6 +176,10 @@
 ;; * private functions for TARGET buffer
 
 ;; variables
+
+(defvar phi-search--last-executed nil
+  "stores the last query")
+(make-variable-buffer-local 'phi-search--last-executed)
 
 (defvar phi-search--original-position nil
   "stores position where this search started from.")
@@ -240,7 +234,7 @@ this value must be nil, if nothing is matched.")
 
 (defun phi-search--select (n)
   "select Nth matching item and go there.
-returns the position of the item, or nil for failure."
+if succeeded, return point. otherwise return nil."
   (when (and (>= n 0)
              (< n (length phi-search--overlays)))
     ;; unselect old item
@@ -274,6 +268,10 @@ returns the position of the item, or nil for failure."
 (make-variable-buffer-local 'phi-search--direction)
 
 ;; variables
+
+(defvar phi-search--target nil
+  "the target (window . buffer) which this prompt buffer is for")
+(make-variable-buffer-local 'phi-search--target)
 
 (defvar phi-search--mode-line-format
   '(" *phi-search*"
