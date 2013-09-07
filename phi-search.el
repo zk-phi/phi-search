@@ -473,6 +473,9 @@ if optional arg command is non-nil, call it after that."
            this-original-command command)
      (when (boundp 'mc--this-command)
        (setq mc--this-command command)))
+   ;; move cursor back to the selection
+   (when phi-search--selection
+     (phi-search--select phi-search--selection))
    ;; clear overlays *without moving back cursor*
    (save-excursion (phi-search--delete-overlays)))
   (phi-search--clean)
