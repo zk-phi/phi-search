@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.1.6
+;; Version: 1.1.8
 
 ;;; Commentary:
 
@@ -40,6 +40,22 @@
 ;; - [C-r] phi-search-again-or-previous
 ;;
 ;;   Similar to phi-search-again-or-next, but move to the previous item.
+;;
+;; - [C-v] phi-search-scroll-up
+;;
+;;   Scroll the target window up, to check candidates.
+;;
+;; - [M-v] phi-search-scroll-down
+;;
+;;   Scroll the target window down.
+;;
+;; - [C-l] phi-search-recenter
+;;
+;;   Recenter the target window.
+;;
+;; - [C-w] phi-search-yank-word
+;;
+;;   Expand query by yanking one word from the target buffer.
 ;;
 ;; - [RET] phi-search-complete
 ;;
@@ -70,12 +86,14 @@
 ;; 1.1.4 fixed a bug in adjacent matches
 ;; 1.1.5 added a hook
 ;; 1.1.6 added an option phi-search-case-sensitive
+;; 1.1.7 added phi-search-recenter, phi-search-yank-word
+;; 1.1.8 added phi-search-scroll-up/down
 
 ;;; Code:
 
 ;; * constants
 
-(defconst phi-search-version "1.1.6")
+(defconst phi-search-version "1.1.8")
 
 ;; * customs
 
@@ -99,7 +117,9 @@
     (define-key map (kbd "C-n") 'phi-search-maybe-next-line)
     (define-key map (kbd "C-p") 'phi-search-maybe-previous-line)
     (define-key map (kbd "C-f") 'phi-search-maybe-forward-char)
-    (define-key map (kbd "C-l") 'phi-search-recenter-top-bottom)
+    (define-key map (kbd "C-v") 'phi-search-scroll-up)
+    (define-key map (kbd "M-v") 'phi-search-scroll-down)
+    (define-key map (kbd "C-l") 'phi-search-recenter)
     (define-key map (kbd "C-w") 'phi-search-yank-word)
     (define-key map (kbd "RET") 'phi-search-complete)
     map)
@@ -317,12 +337,8 @@ returns the position of the item, or nil for failure."
     (phi-search--make-overlays-for query)
     ;; try to select the first item
     (phi-search--select
-     (if backward
-         ;; check if query matches at point with zero width
-         (if (let ((first (car phi-search--overlays)))
-                 (and first (= (overlay-end first) (point)))) 0
-           (1- (length phi-search--overlays)))
-       0)))))
+     (if (not backward) 0
+       (1- (length phi-search--overlays)))))))
 
 ;; * start/end phi-search
 
@@ -462,6 +478,40 @@ if optional arg command is non-nil, call it after that."
   (phi-search--clean)
   (when cmd (call-interactively cmd)))
 
+(defun phi-search-recenter ()
+  "recenter target buffer"
+  (interactive)
+  (phi-search--with-target-buffer
+   (when phi-search--selection
+     (phi-search--select phi-search--selection)
+     (phi-search--with-sublimity
+      (recenter)))))
+
+(defun phi-search-scroll-down ()
+  (interactive)
+  (phi-search--with-target-buffer
+   (phi-search--with-sublimity
+    (call-interactively 'scroll-down))))
+
+(defun phi-search-scroll-up ()
+  (interactive)
+  (phi-search--with-target-buffer
+   (phi-search--with-sublimity
+    (call-interactively 'scroll-up))))
+
+(defun phi-search-yank-word ()
+  "if there's a region in query buffer, kill-region as usual.
+otherwise yank a word from target buffer and expand query."
+  (interactive)
+  (if (or (not (use-region-p))
+          (= (region-beginning) (region-end)))
+      (insert
+       (phi-search--with-target-buffer
+        (buffer-substring-no-properties
+         (point)
+         (save-excursion (forward-word) (point)))))
+    (kill-region (region-beginning) (region-end))))
+
 ;; * phi-search-maybe-xxxx
 
 (defun phi-search-maybe-next-line ()
@@ -487,27 +537,6 @@ if optional arg command is non-nil, call it after that."
       (call-interactively 'forward-char)
     (error
      (phi-search-complete 'forward-char))))
-
-(defun phi-search-recenter-top-bottom ()
-  (interactive)
-  (phi-search--with-target-buffer
-   (recenter-top-bottom)))
-
-(defun phi-search-yank-word ()
-  "If there's a region in search buffer, yank from that.
-Otherwise yank from target buffer and expand search string."
-  (interactive)
-  (if (or (not (use-region-p))
-	  (= (region-beginning) (region-end)))
-      (let ((str (phi-search--with-target-buffer
-		  (save-excursion
-		    (let ((start-point (point))
-			  (end-point (progn (forward-word 1) (point))))
-		      (buffer-substring-no-properties
-		       start-point end-point))))))
-	(insert str))
-
-    (kill-region (region-beginning) (region-end))))
 
 ;; * provide
 

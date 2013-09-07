@@ -4,12 +4,6 @@ multiple-cursors.el対応のインクリメンタルサーチ
 
 another incremental search command, compatible with "multiple-cursors"
 
-** THE VERSION 1.1.0 BROKE BACKWARD COMPATIBILITY
-
-"phi-search-keybindings" is now removed and, "phi-search-mode-map" is
-available instead. To change keybindings, DO NOT use
-"phi-search-keybindings" but USE "phi-search-mode-map".
-
 ** Screencast
 
 [[img/search.gif]]
@@ -38,6 +32,22 @@ start searching. In the window, following commands are available.
 - [C-r] phi-search-again-or-previous
 
   Similar to phi-search-again-or-next, but move to the previous item.
+
+- [C-v] phi-search-scroll-up
+
+  Scroll the target window up, to check candidates.
+
+- [M-v] phi-search-scroll-down
+
+  Scroll the target window down.
+
+- [C-l] phi-search-recenter
+
+  Recenter the target window.
+
+- [C-w] phi-search-yank-word
+
+  Expand query by yanking one word from the target buffer.
 
 - [RET] phi-search-complete
 
@@ -139,23 +149,8 @@ and bind a key.
 
 : (global-set-key (kbd "M-%") 'phi-replace-query)
 
-In the *phi-replace* buffer, following commands are available.
-
-- [C-v] phi-replace-scroll-down
-
-  Scroll the target window down, to check candidates.
-
-- [M-v] phi-replace-scroll-up
-
-  Scroll the target window up.
-
-- [RET] phi-replace-complete
-
-  Execute replace. If query is blank, use the last query.
-
-- [C-g] phi-search-abort
-
-  Quit phi-replace without executing.
+Keybinds in *phi-search* buffer are basically the same as phi-search,
+by default.
 
 ** Known Bugs and Limitations
 

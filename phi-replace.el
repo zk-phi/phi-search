@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.0.4
+;; Version: 1.0.5
 
 ;;; Commentary:
 
@@ -30,24 +30,6 @@
 ;;
 ;;   (global-set-key (kbd "M-%") 'phi-replace)
 
-;; In *phi-replace* buffer, following commands are available.
-;;
-;; - [C-v] phi-replace-scroll-down
-;;
-;;   Scroll the target window down, to check candidates.
-;;
-;; - [M-v] phi-replace-scroll-up
-;;
-;;   Scroll the target window up.
-;;
-;; - [RET] phi-replace-complete
-;;
-;;   Execute replace. If query is blank, use the last query.
-;;
-;; - [C-g] phi-search-abort
-;;
-;;   Quit phi-replace without executing.
-
 ;; For more details, see "Readme".
 
 ;;; Change Log:
@@ -57,17 +39,25 @@
 ;; 1.0.2 use "sublimity" not "nurumacs"
 ;; 1.0.3 better integration with sublimity
 ;; 1.0.4 added a hook
+;; 1.0.5 added some commands
 
 ;;; Code:
 
 (require 'phi-search)
-(defconst phi-replace-version "1.0.4")
+(defconst phi-replace-version "1.0.5")
 
 (defvar phi-replace-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-v") 'phi-replace-scroll-up)
-    (define-key map (kbd "M-v") 'phi-replace-scroll-down)
+    (define-key map (kbd "C-s") 'phi-search-again-or-next)
+    (define-key map (kbd "C-r") 'phi-search-again-or-previous)
     (define-key map (kbd "C-g") 'phi-search-abort)
+    (define-key map (kbd "C-n") 'phi-search-maybe-next-line)
+    (define-key map (kbd "C-p") 'phi-search-maybe-previous-line)
+    (define-key map (kbd "C-f") 'phi-search-maybe-forward-char)
+    (define-key map (kbd "C-v") 'phi-search-scroll-up)
+    (define-key map (kbd "M-v") 'phi-search-scroll-down)
+    (define-key map (kbd "C-l") 'phi-search-recenter)
+    (define-key map (kbd "C-w") 'phi-search-yank-word)
     (define-key map (kbd "RET") 'phi-replace-complete)
     map)
   "keymap for the phi-search prompt buffers")
@@ -78,12 +68,6 @@
 (defvar phi-replace-weight 0.02
   "weight for \"phi-replace\"")
 
-;; * target buffer
-
-(defvar phi-replace--last-executed nil
-  "stores the last query")
-(make-variable-buffer-local 'phi-replace--last-executed)
-
 ;; * prompt buffer
 
 (define-minor-mode phi-replace-mode
@@ -93,10 +77,10 @@
   :map phi-replace-mode-map
   (if phi-replace-mode
       (progn
-       (add-hook 'after-change-functions 'phi-replace--update nil t)
+       (add-hook 'after-change-functions 'phi-search--update nil t)
        (run-hooks 'phi-replace-mode-hook)
        (when (fboundp 'sublimity-mode) (sublimity-mode -1)))
-    (remove-hook 'after-change-functions 'phi-replace--update t)))
+    (remove-hook 'after-change-functions 'phi-search--update t)))
 
 (defvar phi-replace--query-mode nil)
 (make-variable-buffer-local 'phi-replace--query-mode)
@@ -105,15 +89,6 @@
   '(" *phi-replace*"
     (:eval (phi-search--with-target-buffer
             (format " [ %d ]" (length phi-search--overlays))))))
-
-(defun phi-replace--update (&rest _)
-  "update overlays for the target buffer"
-  (phi-search--with-target-buffer
-   (phi-search--with-sublimity
-    (phi-search--delete-overlays)
-    (phi-search--make-overlays-for query)
-    (when phi-search--overlays
-      (goto-char (overlay-end (car phi-search--overlays)))))))
 
 ;; * start / end
 
@@ -145,9 +120,7 @@
     ;; clear variables
     (setq phi-search--original-position nil
           phi-search--overlays nil
-          phi-replace--last-executed str)))
-
-;; * execute replace
+          phi-search--last-executed str)))
 
 ;; * commands
 
@@ -173,7 +146,7 @@
   (interactive)
   ;; if the query is blank, use the last query
   (when (string= (buffer-string) "")
-    (insert phi-replace--last-executed))
+    (insert phi-search--last-executed))
   (let ((force (not phi-replace--query-mode))
         str orig-cursor)
     (phi-search--with-target-buffer
@@ -207,18 +180,6 @@
       (phi-search--delete-overlays)
       (goto-char (overlay-start orig-cursor)))))
   (phi-search--clean))
-
-(defun phi-replace-scroll-down ()
-  (interactive)
-  (phi-search--with-target-buffer
-   (phi-search--with-sublimity
-    (call-interactively 'scroll-down))))
-
-(defun phi-replace-scroll-up ()
-  (interactive)
-  (phi-search--with-target-buffer
-   (phi-search--with-sublimity
-    (call-interactively 'scroll-up))))
 
 ;; provide
 
