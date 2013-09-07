@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.1.5
+;; Version: 1.1.6
 
 ;;; Commentary:
 
@@ -69,12 +69,13 @@
 ;; 1.1.3 better integration with sublimity
 ;; 1.1.4 fixed a bug in adjacent matches
 ;; 1.1.5 added a hook
+;; 1.1.6 added an option phi-search-case-sensitive
 
 ;;; Code:
 
 ;; * constants
 
-(defconst phi-search-version "1.1.5")
+(defconst phi-search-version "1.1.6")
 
 ;; * customs
 
@@ -84,6 +85,10 @@
 
 (defcustom phi-search-limit 1000
   "maximum number of accepted matches"
+  :group 'phi-search)
+
+(defcustom phi-search-case-sensitive nil
+  "when non-nil, phi-search will be case sensitive"
   :group 'phi-search)
 
 (defcustom phi-search-mode-map
@@ -128,17 +133,19 @@
 (defun phi-search--search-backward (query limit &optional inclusive)
   "a handy version of search-backward-regexp"
   (ignore-errors
-   (let* ((pos1 (point))
-          (pos2 (search-backward-regexp query limit t)))
-     (if (or inclusive
-             (not (and pos2 (= pos1 pos2)))) pos2
-       (backward-char 1)
-       (phi-search--search-backward query limit t)))))
+    (let* ((case-fold-search (not phi-search-case-sensitive))
+           (pos1 (point))
+           (pos2 (search-backward-regexp query limit t)))
+      (if (or inclusive
+              (not (and pos2 (= pos1 pos2)))) pos2
+        (backward-char 1)
+        (phi-search--search-backward query limit t)))))
 
 (defun phi-search--search-forward (query limit &optional inclusive)
   "a handy version of search-forward-regexp"
   (ignore-errors
-    (let* ((pos1 (point))
+    (let* ((case-fold-search (not phi-search-case-sensitive))
+           (pos1 (point))
            (pos2 (search-forward-regexp query limit t)))
       (if (or inclusive
               (not (and pos2 (= pos1 pos2)))) pos2
