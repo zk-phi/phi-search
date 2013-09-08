@@ -434,7 +434,7 @@ if succeeded, return point. otherwise return nil."
               phi-search--last-executed)))
     (if (not (string= (buffer-string) ""))
         (phi-search-next)
-      (insert str))))
+      (when str (insert str)))))
 
 (defun phi-search-again-or-previous ()
   "search again with the last query, or search previous item"
@@ -443,7 +443,7 @@ if succeeded, return point. otherwise return nil."
               phi-search--last-executed)))
     (if (not (string= (buffer-string) ""))
         (phi-search-previous)
-      (insert str))))
+      (when str (insert str)))))
 
 (defun phi-search-abort ()
   "abort phi-search"

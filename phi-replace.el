@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.0.5
+;; Version: 1.0.7
 
 ;;; Commentary:
 
@@ -40,17 +40,19 @@
 ;; 1.0.3 better integration with sublimity
 ;; 1.0.4 added a hook
 ;; 1.0.5 added some commands
+;; 1.0.6 better handling of narrowed buffer
+;; 1.0.7 fixed bug on completing replace without matches
 
 ;;; Code:
 
 (require 'phi-search)
-(defconst phi-replace-version "1.0.5")
+(defconst phi-replace-version "1.0.7")
 
 (defvar phi-replace-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-s") 'phi-search-again-or-next)
     (define-key map (kbd "C-r") 'phi-search-again-or-previous)
-    (define-key map (kbd "C-g") 'phi-search-abort)
+    (define-key map (kbd "C-g") 'phi-replace-abort)
     (define-key map (kbd "C-n") 'phi-search-maybe-next-line)
     (define-key map (kbd "C-p") 'phi-search-maybe-previous-line)
     (define-key map (kbd "C-f") 'phi-search-maybe-forward-char)
@@ -67,6 +69,11 @@
 
 (defvar phi-replace-weight 0.02
   "weight for \"phi-replace\"")
+
+;; * target buffer
+
+(defvar phi-replace--original-restriction nil)
+(make-variable-buffer-local 'phi-replace--original-restriction)
 
 ;; * prompt buffer
 
@@ -97,6 +104,8 @@
   (setq phi-search--original-position (point))
   ;; narrow to region
   (when (use-region-p)
+    (setq phi-replace--original-restriction
+          (cons (point-min) (point-max)))
     (narrow-to-region (region-beginning) (region-end))
     (deactivate-mark))
   ;; make prompt buffer and window
@@ -116,11 +125,13 @@
     (delete-window (selected-window))
     (select-window wnd)
     ;; widen
-    (widen)
+    (narrow-to-region (car phi-replace--original-restriction)
+                      (cdr phi-replace--original-restriction))
     ;; clear variables
     (setq phi-search--original-position nil
           phi-search--overlays nil
-          phi-search--last-executed str)))
+          phi-search--last-executed str
+          phi-replace--original-restriction nil)))
 
 ;; * commands
 
@@ -141,19 +152,28 @@
       (call-interactively 'query-replace-regexp)
     (phi-replace--initialize 'query)))
 
+(defun phi-replace-abort ()
+  "abort phi-replace"
+  (interactive)
+  (phi-search--with-target-buffer
+   (phi-search--with-sublimity
+    (phi-search--delete-overlays)))
+  (phi-replace-complete))
+
 (defun phi-replace-complete ()
   "execute phi-replace"
   (interactive)
   ;; if the query is blank, use the last query
-  (when (string= (buffer-string) "")
+  (when (and (string= (buffer-string) "")
+             phi-search--last-executed)
     (insert phi-search--last-executed))
   (let ((force (not phi-replace--query-mode))
         str orig-cursor)
     (phi-search--with-target-buffer
+     (setq orig-cursor (make-overlay phi-search--original-position
+                                     (1+ phi-search--original-position)))
      (when phi-search--overlays
-       (setq str (read-from-minibuffer "replace with ? ")
-             orig-cursor (make-overlay phi-search--original-position
-                                       (1+ phi-search--original-position)))
+       (setq str (read-from-minibuffer "replace with ? "))
        (if force
            ;; replace all
            (dotimes (n (length phi-search--overlays))
