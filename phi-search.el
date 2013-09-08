@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.1.8
+;; Version: 1.1.9
 
 ;;; Commentary:
 
@@ -88,12 +88,13 @@
 ;; 1.1.6 added an option phi-search-case-sensitive
 ;; 1.1.7 added phi-search-recenter, phi-search-yank-word
 ;; 1.1.8 added phi-search-scroll-up/down
+;; 1.1.9 improved fallback behavior when called with region
 
 ;;; Code:
 
 ;; * constants
 
-(defconst phi-search-version "1.1.8")
+(defconst phi-search-version "1.1.9")
 
 ;; * customs
 
@@ -255,7 +256,7 @@ if succeeded, return point. otherwise return nil."
   "minor mode for phi-search prompt buffer"
   :init-value nil
   :global nil
-  :map phi-search-mode-map
+  :keymap phi-search-mode-map
   (if phi-search-mode
       (progn
         (add-hook 'after-change-functions 'phi-search--update nil t)
@@ -263,11 +264,11 @@ if succeeded, return point. otherwise return nil."
         (when (fboundp 'sublimity-mode) (sublimity-mode -1)))
     (remove-hook 'after-change-functions 'phi-search--update t)))
 
+;; variables
+
 (defvar phi-search--direction nil
   "non-nil iff backward")
 (make-variable-buffer-local 'phi-search--direction)
-
-;; variables
 
 (defvar phi-search--target nil
   "the target (window . buffer) which this prompt buffer is for")
@@ -414,10 +415,17 @@ if succeeded, return point. otherwise return nil."
 (defun phi-search ()
   "incremental search command compatible with \"multiple-cursors\""
   (interactive)
-  (if (and (boundp 'popwin:popup-window)
-           (eq (selected-window) popwin:popup-window))
-      (call-interactively 'isearch-forward-regexp)
-    (phi-search--initialize)))
+  (if (or (not (boundp 'popwin:popup-window))
+          (not (eq (selected-window) popwin:popup-window)))
+      (phi-search--initialize)
+    (call-interactively (if phi-search--direction
+                            'isearch-backward-regexp
+                          'isearch-forward-regexp))
+    (when (use-region-p)
+      (let ((string
+             (buffer-substring (region-beginning) (region-end))))
+        (deactivate-mark)
+        (isearch-yank-string string)))))
 
 ;;;###autoload
 (defun phi-search-backward ()
