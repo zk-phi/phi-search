@@ -89,6 +89,7 @@
 ;; 1.1.7 added phi-search-recenter, phi-search-yank-word
 ;; 1.1.8 added phi-search-scroll-up/down
 ;; 1.1.9 improved fallback behavior when called with region
+;;       fixed bug on invoking multiple-cursors just after phi-search
 
 ;;; Code:
 
@@ -477,7 +478,8 @@ if optional arg command is non-nil, call it after that."
                   query phi-search--selection cmd)))))
      (setq this-command command
            this-original-command command)
-     (when (boundp 'mc--this-command)
+     (when (and (boundp 'multiple-cursors-mode)
+                multiple-cursors-mode)
        (setq mc--this-command command)))
    ;; move cursor back to the selection
    (when phi-search--selection
