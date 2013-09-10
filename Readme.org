@@ -53,6 +53,10 @@ start searching. In the window, following commands are available.
 
   Finish searching.
 
+- [C-RET] phi-search-complete-at-beginning
+
+  Finish searching at the beginning of the match.
+
 - [C-g] phi-search-abort
 
   Finish searching, and move back to the original position.

@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.0.7
+;; Version: 1.0.8
 
 ;;; Commentary:
 
@@ -42,24 +42,27 @@
 ;; 1.0.5 added some commands
 ;; 1.0.6 better handling of narrowed buffer
 ;; 1.0.7 fixed bug on completing replace without matches
+;; 1.0.8 use "remap" for default keybindings
 
 ;;; Code:
 
 (require 'phi-search)
-(defconst phi-replace-version "1.0.7")
+(defconst phi-replace-version "1.0.8")
 
 (defvar phi-replace-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-s") 'phi-search-again-or-next)
     (define-key map (kbd "C-r") 'phi-search-again-or-previous)
-    (define-key map (kbd "C-g") 'phi-replace-abort)
-    (define-key map (kbd "C-n") 'phi-search-maybe-next-line)
-    (define-key map (kbd "C-p") 'phi-search-maybe-previous-line)
-    (define-key map (kbd "C-f") 'phi-search-maybe-forward-char)
-    (define-key map (kbd "C-v") 'phi-search-scroll-up)
-    (define-key map (kbd "M-v") 'phi-search-scroll-down)
-    (define-key map (kbd "C-l") 'phi-search-recenter)
-    (define-key map (kbd "C-w") 'phi-search-yank-word)
+    (define-key map [remap phi-search] 'phi-search-again-or-next)
+    (define-key map [remap phi-search-backward] 'phi-search-again-or-previous)
+    (define-key map [remap keyboard-quit] 'phi-replace-abort)
+    (define-key map [remap scroll-up] 'phi-search-scroll-up)
+    (define-key map [remap pager-page-down] 'phi-search-scroll-up)
+    (define-key map [remap scroll-down] 'phi-search-scroll-down)
+    (define-key map [remap pager-page-up] 'phi-search-scroll-down)
+    (define-key map [remap recenter] 'phi-search-recenter)
+    (define-key map [remap kill-region] 'phi-search-yank-word)
+    (define-key map [remap phi-rectangle-kill-region] 'phi-search-yank-word)
     (define-key map (kbd "RET") 'phi-replace-complete)
     map)
   "keymap for the phi-search prompt buffers")
@@ -70,18 +73,18 @@
 (defvar phi-replace-weight 0.02
   "weight for \"phi-replace\"")
 
-;; * target buffer
+;; + target buffer
 
 (defvar phi-replace--original-restriction nil)
 (make-variable-buffer-local 'phi-replace--original-restriction)
 
-;; * prompt buffer
+;; + prompt buffer
 
 (define-minor-mode phi-replace-mode
   "minor mode for phi-replace prompt buffer"
   :init-value nil
   :global nil
-  :map phi-replace-mode-map
+  :keymap phi-replace-mode-map
   (if phi-replace-mode
       (progn
        (add-hook 'after-change-functions 'phi-search--update nil t)
@@ -97,7 +100,7 @@
     (:eval (phi-search--with-target-buffer
             (format " [ %d ]" (length phi-search--overlays))))))
 
-;; * start / end
+;; + start/end phi-replace
 
 (defun phi-replace--initialize (&optional mode)
   ;; store point
@@ -133,7 +136,7 @@
           phi-search--last-executed str
           phi-replace--original-restriction nil)))
 
-;; * commands
+;; + commands
 
 ;;;###autoload
 (defun phi-replace ()

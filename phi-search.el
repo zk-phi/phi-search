@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.1.9
+;; Version: 1.2.1
 
 ;;; Commentary:
 
@@ -31,36 +31,40 @@
 ;;   (global-set-key (kbd "C-s") 'phi-search)
 
 ;; In *phi-search* buffer, following commands are available.
-;;
+
 ;; - [C-s] phi-search-again-or-next
 ;;
 ;;   Move to the next matching item. If query is blank, use the last
 ;;   query.
-;;
+
 ;; - [C-r] phi-search-again-or-previous
 ;;
 ;;   Similar to phi-search-again-or-next, but move to the previous item.
-;;
+
 ;; - [C-v] phi-search-scroll-up
 ;;
 ;;   Scroll the target window up, to check candidates.
-;;
+
 ;; - [M-v] phi-search-scroll-down
 ;;
 ;;   Scroll the target window down.
-;;
+
 ;; - [C-l] phi-search-recenter
 ;;
 ;;   Recenter the target window.
-;;
+
 ;; - [C-w] phi-search-yank-word
 ;;
 ;;   Expand query by yanking one word from the target buffer.
-;;
+
 ;; - [RET] phi-search-complete
 ;;
 ;;   Finish searching.
+
+;; - [C-RET] phi-search-complete-at-beginning
 ;;
+;;   Finish searching at the beginning of the match.
+
 ;; - [C-g] phi-search-abort
 ;;
 ;;   Finish searching, and move back to the original position.
@@ -90,14 +94,16 @@
 ;; 1.1.8 added phi-search-scroll-up/down
 ;; 1.1.9 improved fallback behavior when called with region
 ;;       fixed bug on invoking multiple-cursors just after phi-search
+;; 1.2.0 added command "phi-search-complete-at-beginning"
+;; 1.2.1 use "remap" for default keybindings
 
 ;;; Code:
 
-;; * constants
+;; + constants
 
-(defconst phi-search-version "1.1.9")
+(defconst phi-search-version "1.2.1")
 
-;; * customs
+;; + customs
 
 (defgroup phi-search nil
   "another incremental search command, compatible with \"multiple-cursors\""
@@ -115,15 +121,21 @@
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-s") 'phi-search-again-or-next)
     (define-key map (kbd "C-r") 'phi-search-again-or-previous)
-    (define-key map (kbd "C-g") 'phi-search-abort)
-    (define-key map (kbd "C-n") 'phi-search-maybe-next-line)
-    (define-key map (kbd "C-p") 'phi-search-maybe-previous-line)
-    (define-key map (kbd "C-f") 'phi-search-maybe-forward-char)
-    (define-key map (kbd "C-v") 'phi-search-scroll-up)
-    (define-key map (kbd "M-v") 'phi-search-scroll-down)
-    (define-key map (kbd "C-l") 'phi-search-recenter)
-    (define-key map (kbd "C-w") 'phi-search-yank-word)
+    (define-key map [remap phi-search] 'phi-search-again-or-next)
+    (define-key map [remap phi-search-backward] 'phi-search-again-or-previous)
+    (define-key map [remap keyboard-quit] 'phi-search-abort)
+    (define-key map [remap next-line] 'phi-search-maybe-next-line)
+    (define-key map [remap previous-line] 'phi-search-maybe-previous-line)
+    (define-key map [remap forward-char] 'phi-search-maybe-forward-char)
+    (define-key map [remap scroll-up] 'phi-search-scroll-up)
+    (define-key map [remap pager-page-down] 'phi-search-scroll-up)
+    (define-key map [remap scroll-down] 'phi-search-scroll-down)
+    (define-key map [remap pager-page-up] 'phi-search-scroll-down)
+    (define-key map [remap recenter] 'phi-search-recenter)
+    (define-key map [remap kill-region] 'phi-search-yank-word)
+    (define-key map [remap phi-rectangle-kill-region] 'phi-search-yank-word)
     (define-key map (kbd "RET") 'phi-search-complete)
+    (define-key map (kbd "C-<return>") 'phi-search-complete-at-beginning)
     map)
   "keymap for the phi-search prompt buffers"
   :group 'phi-search)
@@ -132,7 +144,7 @@
   "hook run when entering phi-search-mode"
   :group 'phi-search)
 
-;; * faces
+;; + faces
 
 (make-face 'phi-search-match-face)
 (set-face-attribute 'phi-search-match-face nil
@@ -142,7 +154,7 @@
 (set-face-attribute 'phi-search-selection-face nil
                     :background "#594854")
 
-;; * utilities
+;; + utilities
 
 (defun phi-search--search-backward (query limit &optional inclusive)
   "a handy version of search-backward-regexp"
@@ -175,9 +187,9 @@
          (sublimity--post-command))
      ,@body))
 
-;; * private functions for TARGET buffer
+;; + private functions for TARGET buffer
 
-;; variables
+;; ++ variables
 
 (defvar phi-search--last-executed nil
   "stores the last query")
@@ -200,7 +212,7 @@
 this value must be nil, if nothing is matched.")
 (make-variable-buffer-local 'phi-search--selection)
 
-;; functions
+;; ++ functions
 
 (defun phi-search--delete-overlays ()
   "delete all overlays in THIS target buffer, and go to the original position"
@@ -249,9 +261,9 @@ if succeeded, return point. otherwise return nil."
       (overlay-put ov 'face 'phi-search-selection-face)
       (goto-char (overlay-end ov)))))
 
-;; * private functions for PROMPT buffer
+;; + private functions for PROMPT buffer
 
-;; minor mode
+;; ++ minor mode
 
 (define-minor-mode phi-search-mode
   "minor mode for phi-search prompt buffer"
@@ -265,7 +277,7 @@ if succeeded, return point. otherwise return nil."
         (when (fboundp 'sublimity-mode) (sublimity-mode -1)))
     (remove-hook 'after-change-functions 'phi-search--update t)))
 
-;; variables
+;; ++ variables
 
 (defvar phi-search--direction nil
   "non-nil iff backward")
@@ -284,7 +296,7 @@ if succeeded, return point. otherwise return nil."
              (when selection
                (format " [ %d / %d ]" (1+ selection) total))))))
 
-;; functions
+;; ++ functions
 
 (defmacro phi-search--with-target-buffer (&rest body)
   "eval body with the target buffer selected.
@@ -340,7 +352,7 @@ if succeeded, return point. otherwise return nil."
      (if (not backward) 0
        (1- (length phi-search--overlays)))))))
 
-;; * start/end phi-search
+;; + start/end phi-search
 
 (defun phi-search--initialize ()
   ;; store point
@@ -375,7 +387,7 @@ if succeeded, return point. otherwise return nil."
           phi-search--overlays nil
           phi-search--last-executed str)))
 
-;; * generate repeatable commands
+;; + generate repeatable commands
 
 (defvar phi-search--region-query nil
   "query for a generated command, must be cursor-local")
@@ -410,7 +422,7 @@ if succeeded, return point. otherwise return nil."
            (phi-search--search-forward ,query nil t)))
        ,post-process)))
 
-;; * interactive commands
+;; + interactive commands
 
 ;;;###autoload
 (defun phi-search ()
@@ -489,6 +501,16 @@ if optional arg command is non-nil, call it after that."
   (phi-search--clean)
   (when cmd (call-interactively cmd)))
 
+(defun phi-search-complete-at-beginning ()
+  (interactive)
+  (phi-search-complete
+   `(lambda ()
+      (interactive)
+      (when (looking-back ,(buffer-string))
+        (goto-char (match-beginning 0))))))
+
+;; + replace scroll commands
+
 (defun phi-search-recenter ()
   "recenter target buffer"
   (interactive)
@@ -509,21 +531,6 @@ if optional arg command is non-nil, call it after that."
   (phi-search--with-target-buffer
    (phi-search--with-sublimity
     (call-interactively 'scroll-up))))
-
-(defun phi-search-yank-word ()
-  "if there's a region in query buffer, kill-region as usual.
-otherwise yank a word from target buffer and expand query."
-  (interactive)
-  (if (or (not (use-region-p))
-          (= (region-beginning) (region-end)))
-      (insert
-       (phi-search--with-target-buffer
-        (buffer-substring-no-properties
-         (point)
-         (save-excursion (forward-word) (point)))))
-    (kill-region (region-beginning) (region-end))))
-
-;; * phi-search-maybe-xxxx
 
 (defun phi-search-maybe-next-line ()
   "quit phi-search with next-line"
@@ -549,7 +556,22 @@ otherwise yank a word from target buffer and expand query."
     (error
      (phi-search-complete 'forward-char))))
 
-;; * provide
+;; + other commands
+
+(defun phi-search-yank-word ()
+  "If there's a region in query buffer, kill-region as usual.
+Otherwise yank a word from target buffer and expand query."
+  (interactive)
+  (if (or (not (use-region-p))
+          (= (region-beginning) (region-end)))
+      (insert
+       (phi-search--with-target-buffer
+        (buffer-substring-no-properties
+         (point)
+         (save-excursion (forward-word) (point)))))
+    (kill-region (region-beginning) (region-end))))
+
+;; + provide
 
 (provide 'phi-search)
 
