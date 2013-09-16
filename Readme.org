@@ -33,21 +33,10 @@ start searching. In the window, following commands are available.
 
   Similar to phi-search-again-or-next, but move to the previous item.
 
-- [C-v] phi-search-scroll-up
+- phi-search-yank-word (replaces "kill-region")
 
-  Scroll the target window up, to check candidates.
-
-- [M-v] phi-search-scroll-down
-
-  Scroll the target window down.
-
-- [C-l] phi-search-recenter
-
-  Recenter the target window.
-
-- [C-w] phi-search-yank-word
-
-  Expand query by yanking one word from the target buffer.
+  Like kill-region, but if the region is not active, expand query by
+  yanking one word from the target buffer.
 
 - [RET] phi-search-complete
 
@@ -56,10 +45,6 @@ start searching. In the window, following commands are available.
 - [C-RET] phi-search-complete-at-beginning
 
   Finish searching at the beginning of the match.
-
-- [C-g] phi-search-abort
-
-  Finish searching, and move back to the original position.
 
 ** Working with Regions
 
