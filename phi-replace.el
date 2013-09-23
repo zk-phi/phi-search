@@ -147,6 +147,7 @@
       (call-interactively 'replace-regexp)
     (phi-replace--initialize)))
 
+;;;###autoload
 (defun phi-replace-query ()
   "replace command using phi-search"
   (interactive)
