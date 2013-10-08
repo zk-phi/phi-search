@@ -8,6 +8,27 @@ another incremental search command, compatible with "multiple-cursors"
 
 [[img/search.gif]]
 
+** [NOTE] "phi-search-mode-map", "phi-replace-mode-map" ARE REMOVED IN THE VERSION 2.0.0
+
+These maps are no longer useful. To change keybinds, you should use
+
+- phi-search-default-map :: the phi-search common keymap
+
+- phi-search-additional-keybinds :: list of keybinds in form ((KEY
+     . COMMAND) ...) available only with "phi-search" command
+
+- phi-search-backward-additional-keybinds :: list of keybinds
+     available only with "phi-search-backward" command
+
+- phi-replace-additinoal-keybinds :: list of keybinds available only
+     with "phi-replace" command
+
+instead.
+
+: (define-key phi-search-default-map (kbd "TAB") 'phi-search-again-or-next)
+: (add-to-list 'phi-search-additional-keybinds
+:              '((kbd "<app>") . 'phi-search-complete-at-beginning))
+
 ** Usage
 
 Require this script
@@ -24,19 +45,30 @@ When the command is called, a small window appears at the bottom of
 the current window. Input query there in (emacs) regular expression to
 start searching. In the window, following commands are available.
 
-- [C-s] phi-search-again-or-next
+- phi-search-again-or-next (replaces "phi-search")
 
   Move to the next matching item. If query is blank, use the last
   query.
 
-- [C-r] phi-search-again-or-previous
+- phi-search-again-or-previous (replaces "phi-search-backward")
 
   Similar to phi-search-again-or-next, but move to the previous item.
 
+- phi-search-scroll-up (replaces "scroll-up")
+
+  Scroll the target window up, to check candidates.
+
+- phi-search-scroll-down (replaces "scroll-down")
+
+  Scroll the target window down.
+
+- phi-search-recenter (replaces "recenter")
+
+  Recenter the target window.
+
 - phi-search-yank-word (replaces "kill-region")
 
-  Like kill-region, but if the region is not active, expand query by
-  yanking one word from the target buffer.
+  Expand query by yanking one word from the target buffer.
 
 - [RET] phi-search-complete
 
@@ -45,6 +77,14 @@ start searching. In the window, following commands are available.
 - [C-RET] phi-search-complete-at-beginning
 
   Finish searching at the beginning of the match.
+
+- [C-c C-c] phi-search-unlimit
+
+  Force update results regardless of "phi-search-limit"
+
+- [C-g] phi-search-abort
+
+  Finish searching, and move back to the original position.
 
 ** Working with Regions
 
@@ -102,31 +142,11 @@ command runs here, and the generated command will be repeated with
 fake cursors instead. Because seen from multiple-cursors, this command
 is "the" command.
 
-** Customization
-
-You may change keybindings by changing "phi-search-mode-map", and
-limit of search by "phi-search-limit".
-
-: (define-key phi-search-mode-map (kbd "<") 'phi-search-again-or-previous)
-: (define-key phi-search-mode-map (kbd ">") 'phi-search-again-or-next)
-
-: (setq phi-search-limit 500)
-
-Matching items are propertized with "phi-search-match-face", and the
-selected item is propertized with "phi-search-selection-face". If they
-look not pretty in your colorscheme, you may modify them.
-
-: (set-face-attribute 'phi-search-selection-face nil
-:                     :background "orange")
-
 ** phi-replace.el
 
 "phi-replace" and "phi-replace-query" in "phi-replace.el" are
 interactive replace commands, that use the same interface as
 "phi-search".
-
-They have advantages in checking candidates before actually execute
-replace.
 
 [[img/replace.gif]]
 
@@ -140,6 +160,40 @@ and bind a key.
 
 Keybinds in *phi-search* buffer are basically the same as phi-search,
 by default.
+
+** Customization
+
+You may change keybindings by changing "phi-search-default-map", and
+limit of search by "phi-search-limit".
+
+: (define-key phi-search-default-map (kbd "<") 'phi-search-again-or-previous)
+: (define-key phi-search-default-map (kbd ">") 'phi-search-again-or-next)
+: (setq phi-search-limit 500)
+
+This will affect commands in both "phi-search.el" and
+"phi-replace.el". If you want to add commands only for a specific
+command, you may use variables below.
+
+- phi-search-default-map :: the phi-search common keymap
+
+- phi-search-additional-keybinds :: list of keybinds in form ((KEY
+     . COMMAND) ...) available only with "phi-search" command
+
+- phi-search-backward-additional-keybinds :: list of keybinds
+     available only with "phi-search-backward" command
+
+- phi-replace-additinoal-keybinds :: list of keybinds available only
+     with "phi-replace" command
+
+: (add-to-list 'phi-search-additional-keybinds
+:              '((kbd "<app>") . 'phi-search-complete-at-beginning))
+
+Matching items are propertized with "phi-search-match-face", and the
+selected item is propertized with "phi-search-selection-face". If they
+look not pretty in your colorscheme, you may modify them.
+
+: (set-face-attribute 'phi-search-selection-face nil
+:                     :background "orange")
 
 ** Known Bugs and Limitations
 
