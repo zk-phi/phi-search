@@ -152,7 +152,7 @@ interactive replace commands, that use the same interface as
 
 To use these commands, require
 
-: (requre 'phi-replace)
+: (require 'phi-replace)
 
 and bind a key.
 
