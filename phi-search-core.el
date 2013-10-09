@@ -343,7 +343,7 @@ Otherwise yank a word from target buffer and expand query."
     (add-hook 'after-change-functions 'phi-search--update nil t)
     (use-local-map
      (let ((map (copy-keymap phi-search-default-map)))
-       (dolist (bind keybinds)
+       (dolist (bind (reverse keybinds))
          (eval `(define-key map ,(car bind) ,(cdr bind))))
        map))
     (when (fboundp 'sublimity-mode) (sublimity-mode -1))
