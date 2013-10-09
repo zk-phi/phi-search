@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.0.0
+;; Version: 2.0.1
 
 ;;; Commentary:
 
@@ -103,6 +103,7 @@
 ;; 1.2.1 use "remap" for default keybindings
 ;; 2.0.0 divided into two files ("phi-search-core.el")
 ;;       added "phi-search-unlimit" command
+;; 2.0.1 added phi-search-init-hook
 
 ;;; Code:
 
@@ -113,6 +114,14 @@
 (defconst phi-search-version "2.0.0")
 
 ;; + customs
+
+(defcustom phi-search-case-sensitive nil
+  "when non-nil, phi-search will be case sensitive"
+  :group 'phi-search)
+
+(defcustom phi-search-init-hook nil
+  "hook run after initialization of phi-search"
+  :group 'phi-search)
 
 (defcustom phi-search-additional-keybinds
   '(([remap next-line] . 'phi-search-maybe-next-line)
@@ -215,6 +224,7 @@
     (deactivate-mark))
   (let ((str phi-search--original-region))
     (phi-search--initialize
+     (not phi-search-case-sensitive)
      phi-search-mode-line-format
      (if backward
          phi-search-backward-additional-keybinds
@@ -222,7 +232,8 @@
      nil
      (when backward 'phi-search--backward-after-update-function)
      'phi-search--complete-function)
-    (when str (insert str))))
+    (when str (insert str)))
+  (run-hooks 'phi-search-init-hook))
 
 ;; + commands
 

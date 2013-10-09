@@ -44,10 +44,6 @@
   "maximum number of accepted matches"
   :group 'phi-search)
 
-(defcustom phi-search-case-sensitive nil
-  "when non-nil, phi-search will be case sensitive"
-  :group 'phi-search)
-
 (defcustom phi-search-default-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-s") 'phi-search-again-or-next)
@@ -83,7 +79,7 @@
 (defun phi-search--search-backward (query limit &optional filter inclusive)
   "a handy version of search-backward-regexp"
   (ignore-errors
-    (let* ((case-fold-search (not phi-search-case-sensitive))
+    (let* ((case-fold-search phi-search--case-fold-search)
            (pos1 (point))
            (pos2 (search-backward-regexp query limit t)))
       (if (or (and (not inclusive) pos2 (= pos1 pos2))
@@ -96,7 +92,7 @@
 (defun phi-search--search-forward (query limit &optional filter inclusive)
   "a handy version of search-forward-regexp"
   (ignore-errors
-    (let* ((case-fold-search (not phi-search-case-sensitive))
+    (let* ((case-fold-search phi-search--case-fold-search)
            (pos1 (point))
            (pos2 (search-forward-regexp query limit t)))
       (if (or (and (not inclusive) pos2 (= pos1 pos2))
@@ -125,6 +121,9 @@
 (defvar phi-search--filter-function nil
   "when non-nil, candidates must pass this filter")
 (make-variable-buffer-local 'phi-search--filter-function)
+
+(defvar phi-search--case-fold-search t)
+(make-variable-buffer-local 'phi-search--case-fold-search)
 
 (defvar phi-search--original-position nil
   "stores position where this search started from.")
@@ -330,10 +329,11 @@ Otherwise yank a word from target buffer and expand query."
 
 ;; + start/end phi-search
 
-(defun phi-search--initialize (modeline-fmt keybinds filter-fn update-fn complete-fn)
+(defun phi-search--initialize (case-fold modeline-fmt keybinds filter-fn update-fn complete-fn)
   (setq phi-search--original-position     (point)
         phi-search--filter-function       filter-fn
         phi-search--after-update-function update-fn
+        phi-search--case-fold-search      case-fold
         phi-search--selection             nil
         phi-search--overlays              nil)
   (let ((wnd (selected-window))

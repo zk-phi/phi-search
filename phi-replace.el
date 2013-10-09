@@ -45,6 +45,7 @@
 ;; 1.0.8 use "remap" for default keybindings
 ;; 2.0.0 follow "phi-search" update
 ;;       changed the default value of phi-replace-weight
+;; 2.0.1 added phi-replace-init-hook
 
 ;;; Code:
 
@@ -58,6 +59,14 @@
 
 (defcustom phi-replace-weight 0
   "weight for \"phi-replace\""
+  :group 'phi-search)
+
+(defcustom phi-replace-init-hook nil
+  "hook run after initialization of phi-replace"
+  :group 'phi-search)
+
+(defcustom phi-replace-case-sensitive nil
+  "when non-nil, phi-replace will be case sensitive"
   :group 'phi-search)
 
 (defcustom phi-replace-additional-keybinds '()
@@ -122,9 +131,11 @@
     (narrow-to-region (region-beginning) (region-end))
     (deactivate-mark))
   (phi-search--initialize
+   (not phi-replace-case-sensitive)
    phi-replace--mode-line-format
    nil nil nil
-   'phi-replace--complete-function))
+   'phi-replace--complete-function)
+  (run-hooks 'phi-replace-init-hook))
 
 ;; + commands
 
