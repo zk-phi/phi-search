@@ -76,30 +76,28 @@
 
 ;; + utilities
 
-(defun phi-search--search-backward (query limit &optional filter inclusive)
+(defun phi-search--search-backward (query limit &optional case-fold-search filter inclusive)
   "a handy version of search-backward-regexp"
   (ignore-errors
-    (let* ((case-fold-search phi-search--case-fold-search)
-           (pos1 (point))
+    (let* ((pos1 (point))
            (pos2 (search-backward-regexp query limit t)))
       (if (or (and (not inclusive) pos2 (= pos1 pos2))
               (and filter (not (save-match-data (funcall filter)))))
           (progn
             (backward-char 1)
-            (phi-search--search-backward query limit filter t))
+            (phi-search--search-backward query limit case-fold-search filter t))
         pos2))))
 
-(defun phi-search--search-forward (query limit &optional filter inclusive)
+(defun phi-search--search-forward (query limit &optional case-fold-search filter inclusive)
   "a handy version of search-forward-regexp"
   (ignore-errors
-    (let* ((case-fold-search phi-search--case-fold-search)
-           (pos1 (point))
+    (let* ((pos1 (point))
            (pos2 (search-forward-regexp query limit t)))
       (if (or (and (not inclusive) pos2 (= pos1 pos2))
               (and filter (not (save-match-data (funcall filter)))))
           (progn
             (forward-char 1)
-            (phi-search--search-forward query limit filter t))
+            (phi-search--search-forward query limit case-fold-search filter t))
         pos2))))
 
 (defmacro phi-search--with-sublimity (&rest body)
@@ -172,6 +170,7 @@ this value must be nil, if nothing is matched.")
 
 (defun phi-search--make-overlays-for-1 (query limit &optional unlimited)
   (while (and (phi-search--search-backward query limit
+                                           phi-search--case-fold-search
                                            phi-search--filter-function)
               (let ((ov (make-overlay (match-beginning 0) (match-end 0))))
                 (overlay-put ov 'face 'phi-search-match-face)
