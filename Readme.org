@@ -21,7 +21,7 @@ These maps are no longer useful. To change keybinds, you should use
      available only with "phi-search-backward" command
 
 - phi-replace-additinoal-keybinds :: list of keybinds available only
-     with "phi-replace" command
+     with "phi-replace(-query)" command
 
 instead.
 
@@ -162,13 +162,12 @@ Keybinds in *phi-search* buffer are basically the same as phi-search,
 by default.
 
 ** Customization
+*** Keybinds
 
-You may change keybindings by changing "phi-search-default-map", and
-limit of search by "phi-search-limit".
+You may change keybindings by changing "phi-search-default-map".
 
 : (define-key phi-search-default-map (kbd "<") 'phi-search-again-or-previous)
 : (define-key phi-search-default-map (kbd ">") 'phi-search-again-or-next)
-: (setq phi-search-limit 500)
 
 This will affect commands in both "phi-search.el" and
 "phi-replace.el". If you want to add commands only for a specific
@@ -187,6 +186,22 @@ command, you may use variables below.
 
 : (add-to-list 'phi-search-additional-keybinds
 :              '((kbd "<app>") . 'phi-search-complete-at-beginning))
+
+*** Searching
+
+You may change limit of search by setting "phi-search-limit", and
+case-sensitivity by "phi-search(replace)-case-sensitive".
+
+: (setq phi-search-limit           10000
+:       phi-search-case-sensitive  t
+:       phi-replace-case-sensitive t)
+
+*** Hooks
+
+Hooks "phi-search-init-hook" and "phi-replace-init-hook" are hooks run
+when phi-search buffer is initialized.
+
+*** Face
 
 Matching items are propertized with "phi-search-match-face", and the
 selected item is propertized with "phi-search-selection-face". If they
