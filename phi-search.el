@@ -104,6 +104,7 @@
 ;; 2.0.0 divided into two files ("phi-search-core.el")
 ;;       added "phi-search-unlimit" command
 ;; 2.0.1 added phi-search-init-hook
+;;       accept prefix-argument
 
 ;;; Code:
 
@@ -230,11 +231,12 @@
 ;; + commands
 
 ;;;###autoload
-(defun phi-search ()
+(defun phi-search (&optional use-isearch)
   "incremental search command compatible with \"multiple-cursors\""
-  (interactive)
-  (if (or (not (boundp 'popwin:popup-window))
-          (not (eq (selected-window) popwin:popup-window)))
+  (interactive "P")
+  (if (and (not use-isearch)
+           (or (not (boundp 'popwin:popup-window))
+               (not (eq (selected-window) popwin:popup-window))))
       (phi-search--search-initialize nil)
     (call-interactively 'isearch-forward-regexp)
     (when (use-region-p)
@@ -244,11 +246,12 @@
         (isearch-yank-string string)))))
 
 ;;;###autoload
-(defun phi-search-backward ()
+(defun phi-search-backward (&optional use-isearch)
   "incremental search command compatible with \"multiple-cursors\""
   (interactive)
-  (if (or (not (boundp 'popwin:popup-window))
-          (not (eq (selected-window) popwin:popup-window)))
+  (if (and (not use-isearch)
+           (or (not (boundp 'popwin:popup-window))
+               (not (eq (selected-window) popwin:popup-window))))
       (phi-search--search-initialize t)
     (call-interactively 'isearch-backward-regexp)
     (when (use-region-p)
