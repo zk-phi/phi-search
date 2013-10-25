@@ -131,16 +131,6 @@
   "additional bindings used in phi-search"
   :group 'phi-search)
 
-(defcustom phi-search-backward-additional-keybinds
-  (append
-   '(([remap phi-search] . 'phi-search-again-or-previous)
-     ([remap phi-search-backward] . 'phi-search-again-or-next)
-     ([remap phi-search-again-or-next] . 'phi-search-again-or-previous)
-     ([remap phi-search-again-or-previous] . 'phi-search-again-or-next))
-   phi-search-additional-keybinds)
-  "additional bindings used in phi-search-backward"
-  :group 'phi-search)
-
 (defcustom phi-search-mode-line-format
   '(" *phi-search*"
     (:eval (let (total selection)
@@ -180,9 +170,11 @@
        (interactive)
        ,pre-process
        (dotimes (n ,(1+ n))
-         (unless (phi-search--search-forward ,query nil ,filter (zerop n))
+         (unless (phi-search--search-forward
+                  ,query nil ,(not phi-search-case-sensitive) ,filter (zerop n))
            (goto-char (point-min))
-           (phi-search--search-forward ,query nil ,filter t)))
+           (phi-search--search-forward
+            ,query nil ,(not phi-search-case-sensitive) ,filter t)))
        ,post-process)))
 
 ;; + start/end phi-search
@@ -227,7 +219,7 @@
      (not phi-search-case-sensitive)
      phi-search-mode-line-format
      (if backward
-         phi-search-backward-additional-keybinds
+         phi-search-additional-keybinds
        phi-search-additional-keybinds)
      nil
      (when backward 'phi-search--backward-after-update-function)
