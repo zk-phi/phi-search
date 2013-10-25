@@ -8,26 +8,9 @@ another incremental search command, compatible with "multiple-cursors"
 
 [[img/search.gif]]
 
-** [NOTE] "phi-search-mode-map", "phi-replace-mode-map" ARE REMOVED IN THE VERSION 2.0.0
+** [NOTE] "phi-search-backward-additinoal-keybinds" IS REMOVED IN THE VERSION 2.0.1
 
-These maps are no longer useful. To change keybinds, you should use
-
-- phi-search-default-map :: the phi-search common keymap
-
-- phi-search-additional-keybinds :: list of keybinds in form ((KEY
-     . COMMAND) ...) available only with "phi-search" command
-
-- phi-search-backward-additional-keybinds :: list of keybinds
-     available only with "phi-search-backward" command
-
-- phi-replace-additinoal-keybinds :: list of keybinds available only
-     with "phi-replace(-query)" command
-
-instead.
-
-: (define-key phi-search-default-map (kbd "TAB") 'phi-search-again-or-next)
-: (add-to-list 'phi-search-additional-keybinds
-:              '((kbd "<app>") . 'phi-search-complete-at-beginning))
+Now phi-search-backward uses the same keybinds as forward search.
 
 ** Usage
 
@@ -176,13 +159,11 @@ command, you may use variables below.
 - phi-search-default-map :: the phi-search common keymap
 
 - phi-search-additional-keybinds :: list of keybinds in form ((KEY
-     . COMMAND) ...) available only with "phi-search" command
-
-- phi-search-backward-additional-keybinds :: list of keybinds
-     available only with "phi-search-backward" command
+     . COMMAND) ...) available only with "phi-search(-backward)"
+     command
 
 - phi-replace-additinoal-keybinds :: list of keybinds available only
-     with "phi-replace" command
+     with "phi-replace(-query)" command
 
 : (add-to-list 'phi-search-additional-keybinds
 :              '((kbd "<app>") . 'phi-search-complete-at-beginning))
