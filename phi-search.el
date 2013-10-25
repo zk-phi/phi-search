@@ -248,7 +248,7 @@
 ;;;###autoload
 (defun phi-search-backward (&optional use-isearch)
   "incremental search command compatible with \"multiple-cursors\""
-  (interactive)
+  (interactive "P")
   (if (and (not use-isearch)
            (or (not (boundp 'popwin:popup-window))
                (not (eq (selected-window) popwin:popup-window))))
