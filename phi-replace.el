@@ -55,6 +55,11 @@
 
 (defconst phi-replace-version "2.0.0")
 
+;; + suppress byte-compiler
+
+(declare-function sublimity--pre-command "sublimity")
+(declare-function sublimity--post-command "sublimity")
+
 ;; + customs
 
 (defcustom phi-replace-weight 0

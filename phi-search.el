@@ -114,6 +114,10 @@
 
 (defconst phi-search-version "2.0.0")
 
+;; + suppress byte-compiler
+
+(defvar mc--this-command)
+
 ;; + customs
 
 (defcustom phi-search-case-sensitive nil
@@ -235,8 +239,8 @@
   "incremental search command compatible with \"multiple-cursors\""
   (interactive "P")
   (if (and (not use-isearch)
-           (or (not (boundp 'popwin:popup-window))
-               (not (eq (selected-window) popwin:popup-window))))
+           (not (and (boundp 'popwin:popup-window)
+                     (eq (selected-window) popwin:popup-window))))
       (phi-search--search-initialize nil)
     (call-interactively 'isearch-forward-regexp)
     (when (use-region-p)
@@ -250,8 +254,8 @@
   "incremental search command compatible with \"multiple-cursors\""
   (interactive "P")
   (if (and (not use-isearch)
-           (or (not (boundp 'popwin:popup-window))
-               (not (eq (selected-window) popwin:popup-window))))
+           (not (and (boundp 'popwin:popup-window)
+                     (eq (selected-window) popwin:popup-window))))
       (phi-search--search-initialize t)
     (call-interactively 'isearch-backward-regexp)
     (when (use-region-p)

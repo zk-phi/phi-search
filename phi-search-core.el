@@ -34,6 +34,11 @@
 
 (defconst phi-search-core-version "1.0.0")
 
+;; + suppress byte-compiler
+
+(declare-function sublimity--pre-command "sublimity")
+(declare-function sublimity--post-command "sublimity")
+
 ;; + customs
 
 (defgroup phi-search nil
