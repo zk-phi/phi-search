@@ -157,7 +157,7 @@
 
 (defvar phi-search--region-query nil
   "query for a generated command, must be cursor-local")
-(eval-after-load "multiple-cursors"
+(eval-after-load 'multiple-cursors
   '(add-to-list 'mc/cursor-specific-vars 'phi-search--region-query))
 
 (defun phi-search--generate-command (query n &optional filter cmd use-region)
