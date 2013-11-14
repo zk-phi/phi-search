@@ -114,11 +114,9 @@
                    (funcall ioit ov hidep))
                   ((overlay-get ov 'isearch-open-invisible)
                    (if hidep
-                       (let ((orig-value (overlay-get ov 'phi-invisible)))
-                         (overlay-put ov 'invisible (or orig-value t)))
-                     (let ((orig-value (overlay-get ov 'invisible)))
-                       (overlay-put ov 'phi-invisible (or orig-value t))
-                       (overlay-put ov 'invisible nil)))))))
+                       (overlay-put ov 'invisible (overlay-get ov 'phi-invisible))
+                     (overlay-put ov 'phi-invisible (overlay-get ov 'invisible))
+                     (overlay-put ov 'invisible nil))))))
         (overlays-at (point))))
 
 (defun phi-search--open-invisible-permanently ()
