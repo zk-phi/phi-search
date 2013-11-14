@@ -27,6 +27,7 @@
 ;;; Change Log:
 
 ;; 1.0.0 divided from phi-search.el 1.2.1
+;; 1.1.0 handle "isearch-open-invisible" properties
 
 ;;; Code:
 
@@ -105,6 +106,28 @@
             (phi-search--search-forward query limit case-fold-search filter t))
         pos2))))
 
+(defun phi-search--open-invisible-temporary (hidep)
+  "when nil, show invisible text at point. otherwise hide it."
+  (mapc (lambda (ov)
+          (let ((ioit (overlay-get ov 'isearch-open-invisible-temporary)))
+            (cond (ioit
+                   (funcall ioit ov hidep))
+                  ((overlay-get ov 'isearch-open-invisible)
+                   (if hidep
+                       (let ((orig-value (overlay-get ov 'phi-invisible)))
+                         (overlay-put ov 'invisible (or orig-value t)))
+                     (let ((orig-value (overlay-get ov 'invisible)))
+                       (overlay-put ov 'phi-invisible (or orig-value t))
+                       (overlay-put ov 'invisible nil)))))))
+        (overlays-at (point))))
+
+(defun phi-search--open-invisible-permanently ()
+  "make point visible permanently"
+  (mapc (lambda (ov)
+          (let ((ioi (overlay-get ov 'isearch-open-invisible)))
+            (when ioi (funcall ioi ov))))
+        (overlays-at (point))))
+
 (defmacro phi-search--with-sublimity (&rest body)
   "if sublimity is installed, use it"
   `(if (boundp 'sublimity-scroll-version)
@@ -147,12 +170,14 @@ this value must be nil, if nothing is matched.")
 
 ;; ++ functions
 
-(defun phi-search--delete-overlays ()
+(defun phi-search--delete-overlays (&optional keep-point)
   "delete all overlays in THIS target buffer, and go to the original position"
   (mapc 'delete-overlay phi-search--overlays)
   (setq phi-search--overlays nil
         phi-search--selection nil)
-  (goto-char phi-search--original-position))
+  (unless keep-point
+    (phi-search--open-invisible-temporary t)
+    (goto-char phi-search--original-position)))
 
 (defun phi-search--make-overlays-for (query &optional unlimited)
   "make overlays for all matching items in THIS target buffer."
@@ -189,13 +214,16 @@ this value must be nil, if nothing is matched.")
              (< n (length phi-search--overlays)))
     ;; unselect old item
     (when phi-search--selection
+      (phi-search--open-invisible-temporary t)
       (overlay-put (nth phi-search--selection phi-search--overlays)
                    'face 'phi-search-match-face))
     ;; select new item if there
     (let ((ov (nth n phi-search--overlays)))
       (setq phi-search--selection n)
       (overlay-put ov 'face 'phi-search-selection-face)
-      (goto-char (overlay-end ov)))))
+      (goto-char (overlay-end ov))
+      (phi-search--open-invisible-temporary nil)
+      (point))))
 
 ;; + private functions/variables for PROMPT buffer
 ;; ++ variables
@@ -358,10 +386,11 @@ Otherwise yank a word from target buffer and expand query."
 (defun phi-search-complete (&rest args)
   "finish phi-search. (for developers: ARGS are passed to complete-function)"
   (interactive)
+  (phi-search--open-invisible-permanently)
   (when phi-search--before-complete-function
     (apply phi-search--before-complete-function args))
   (phi-search--with-target-buffer
-   (save-excursion (phi-search--delete-overlays)))
+   (phi-search--delete-overlays t))
   (let ((wnd (car phi-search--target))
         (str (buffer-string)))
     (kill-buffer (current-buffer))

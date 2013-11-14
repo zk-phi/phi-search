@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.0.1
+;; Version: 2.1.0
 
 ;;; Commentary:
 
@@ -105,6 +105,7 @@
 ;;       added "phi-search-unlimit" command
 ;; 2.0.1 added phi-search-init-hook
 ;;       accept prefix-argument
+;; 2.1.0 handle "isearch-open-invisible" properties
 
 ;;; Code:
 
@@ -180,6 +181,7 @@
            (goto-char (point-min))
            (phi-search--search-forward
             ,query nil ,(not phi-search-case-sensitive) ,filter t)))
+       (phi-search--open-invisible-permanently)
        ,post-process)))
 
 ;; + start/end phi-search
