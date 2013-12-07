@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.0.0
+;; Version: 2.0.2
 
 ;;; Commentary:
 
@@ -46,6 +46,7 @@
 ;; 2.0.0 follow "phi-search" update
 ;;       changed the default value of phi-replace-weight
 ;; 2.0.1 added phi-replace-init-hook
+;; 2.0.2 compatible with phi-search-core v1.2.0
 
 ;;; Code:
 
@@ -53,7 +54,7 @@
 
 ;; + constant
 
-(defconst phi-replace-version "2.0.0")
+(defconst phi-replace-version "2.0.2")
 
 ;; + suppress byte-compiler
 
@@ -68,10 +69,6 @@
 
 (defcustom phi-replace-init-hook nil
   "hook run after initialization of phi-replace"
-  :group 'phi-search)
-
-(defcustom phi-replace-case-sensitive nil
-  "when non-nil, phi-replace will be case sensitive"
   :group 'phi-search)
 
 (defcustom phi-replace-additional-keybinds '()
@@ -136,7 +133,6 @@
     (narrow-to-region (region-beginning) (region-end))
     (deactivate-mark))
   (phi-search--initialize
-   (not phi-replace-case-sensitive)
    phi-replace--mode-line-format
    nil nil nil
    'phi-replace--complete-function)

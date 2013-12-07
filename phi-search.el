@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.1.0
+;; Version: 2.1.1
 
 ;;; Commentary:
 
@@ -106,6 +106,7 @@
 ;; 2.0.1 added phi-search-init-hook
 ;;       accept prefix-argument
 ;; 2.1.0 handle "isearch-open-invisible" properties
+;; 2.1.1 compatible with phi-search-core v1.2.0
 
 ;;; Code:
 
@@ -113,17 +114,13 @@
 
 ;; + constants
 
-(defconst phi-search-version "2.0.0")
+(defconst phi-search-version "2.1.1")
 
 ;; + suppress byte-compiler
 
 (defvar mc--this-command)
 
 ;; + customs
-
-(defcustom phi-search-case-sensitive nil
-  "when non-nil, phi-search will be case sensitive"
-  :group 'phi-search)
 
 (defcustom phi-search-init-hook nil
   "hook run after initialization of phi-search"
@@ -176,11 +173,9 @@
        (interactive)
        ,pre-process
        (dotimes (n ,(1+ n))
-         (unless (phi-search--search-forward
-                  ,query nil ,(not phi-search-case-sensitive) ,filter (zerop n))
+         (unless (phi-search--search-forward ,query nil ,filter (zerop n))
            (goto-char (point-min))
-           (phi-search--search-forward
-            ,query nil ,(not phi-search-case-sensitive) ,filter t)))
+           (phi-search--search-forward ,query nil ,filter t)))
        (phi-search--open-invisible-permanently)
        ,post-process)))
 
@@ -223,7 +218,6 @@
     (deactivate-mark))
   (let ((str phi-search--original-region))
     (phi-search--initialize
-     (not phi-search-case-sensitive)
      phi-search-mode-line-format
      (if backward
          phi-search-additional-keybinds

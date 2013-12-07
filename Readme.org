@@ -8,9 +8,9 @@ another incremental search command, compatible with "multiple-cursors"
 
 [[img/search.gif]]
 
-** [NOTE] "phi-search-backward-additinoal-keybinds" IS REMOVED IN THE VERSION 2.0.1
+** [NOTE] "phi-replace-case-sensitive" IS REMOVED IN THE LATEST VERSION
 
-Now phi-search-backward uses the same keybinds as forward search.
+now use the same value as phi-search-case-sensitive.
 
 ** Usage
 
@@ -174,8 +174,11 @@ You may change limit of search by setting "phi-search-limit", and
 case-sensitivity by "phi-search(replace)-case-sensitive".
 
 : (setq phi-search-limit           10000
-:       phi-search-case-sensitive  t
-:       phi-replace-case-sensitive t)
+:       phi-search-case-sensitive  t)
+
+You may also set "phi-search-case-sensitive" to 'guess, to make
+phi-search case sensitive only when some upcase letters are in the
+query.
 
 *** Hooks
 
@@ -206,4 +209,3 @@ This command uses "multiple-cursors" variables and behavior that are
 not documented. Therefore, after you update "multiple-cursors", it is
 good idea to test if this command works still correctly, before you
 use this command actually.
-

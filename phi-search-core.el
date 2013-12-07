@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.0.0
+;; Version: 1.2.0
 
 ;;; Commentary:
 
@@ -28,6 +28,7 @@
 
 ;; 1.0.0 divided from phi-search.el 1.2.1
 ;; 1.1.0 handle "isearch-open-invisible" properties
+;; 1.2.0 implement "guess" option for "phi-search-case-sensitive"
 
 ;;; Code:
 
@@ -48,6 +49,10 @@
 
 (defcustom phi-search-limit 1000
   "maximum number of accepted matches"
+  :group 'phi-search)
+
+(defcustom phi-search-case-sensitive nil
+  "when non-nil, phi-search become case sensitive"
   :group 'phi-search)
 
 (defcustom phi-search-default-map
@@ -82,28 +87,34 @@
 
 ;; + utilities
 
-(defun phi-search--search-backward (query limit &optional case-fold-search filter inclusive)
+(defun phi-search--search-backward (query limit &optional filter inclusive)
   "a handy version of search-backward-regexp"
   (ignore-errors
-    (let* ((pos1 (point))
+    (let* ((case-fold-search (or (not phi-search-case-sensitive)
+                                 (and (eq phi-search-case-sensitive 'guess)
+                                      (string= query (downcase query)))))
+           (pos1 (point))
            (pos2 (search-backward-regexp query limit t)))
       (if (or (and (not inclusive) pos2 (= pos1 pos2))
               (and filter (not (save-match-data (funcall filter)))))
           (progn
             (backward-char 1)
-            (phi-search--search-backward query limit case-fold-search filter t))
+            (phi-search--search-backward query limit filter t))
         pos2))))
 
-(defun phi-search--search-forward (query limit &optional case-fold-search filter inclusive)
+(defun phi-search--search-forward (query limit &optional filter inclusive)
   "a handy version of search-forward-regexp"
   (ignore-errors
-    (let* ((pos1 (point))
+    (let* ((case-fold-search (or (not phi-search-case-sensitive)
+                                 (and (eq phi-search-case-sensitive 'guess)
+                                      (string= query (downcase query)))))
+           (pos1 (point))
            (pos2 (search-forward-regexp query limit t)))
       (if (or (and (not inclusive) pos2 (= pos1 pos2))
               (and filter (not (save-match-data (funcall filter)))))
           (progn
             (forward-char 1)
-            (phi-search--search-forward query limit case-fold-search filter t))
+            (phi-search--search-forward query limit filter t))
         pos2))))
 
 (defun phi-search--open-invisible-temporary (hidep)
@@ -145,9 +156,6 @@
 (defvar phi-search--filter-function nil
   "when non-nil, candidates must pass this filter")
 (make-variable-buffer-local 'phi-search--filter-function)
-
-(defvar phi-search--case-fold-search t)
-(make-variable-buffer-local 'phi-search--case-fold-search)
 
 (defvar phi-search--original-position nil
   "stores position where this search started from.")
@@ -198,7 +206,6 @@ this value must be nil, if nothing is matched.")
 
 (defun phi-search--make-overlays-for-1 (query limit &optional unlimited)
   (while (and (phi-search--search-backward query limit
-                                           phi-search--case-fold-search
                                            phi-search--filter-function)
               (let ((ov (make-overlay (match-beginning 0) (match-end 0))))
                 (overlay-put ov 'face 'phi-search-match-face)
@@ -359,11 +366,10 @@ Otherwise yank a word from target buffer and expand query."
 
 ;; + start/end phi-search
 
-(defun phi-search--initialize (case-fold modeline-fmt keybinds filter-fn update-fn complete-fn)
+(defun phi-search--initialize (modeline-fmt keybinds filter-fn update-fn complete-fn)
   (setq phi-search--original-position     (point)
         phi-search--filter-function       filter-fn
         phi-search--after-update-function update-fn
-        phi-search--case-fold-search      case-fold
         phi-search--selection             nil
         phi-search--overlays              nil)
   (let ((wnd (selected-window))
