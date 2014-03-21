@@ -139,7 +139,7 @@
 
 (defmacro phi-search--with-sublimity (&rest body)
   "if sublimity is installed, use it"
-  `(if (boundp 'sublimity-scroll-version)
+  `(if (and (boundp 'sublimity-mode) sublimity-mode)
        (progn
          (sublimity--pre-command)
          ,@body
@@ -382,7 +382,6 @@ Otherwise yank a word from target buffer and expand query."
        (dolist (bind (reverse keybinds))
          (eval `(define-key map ,(car bind) ,(cdr bind))))
        map))
-    (when (fboundp 'sublimity-mode) (sublimity-mode -1))
     (setq mode-line-format                     modeline-fmt
           phi-search--target                   (cons wnd buf)
           phi-search--before-complete-function complete-fn)))
