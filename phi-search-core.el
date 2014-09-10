@@ -75,17 +75,15 @@
 
 ;; + faces
 
-(make-face 'phi-search-match-face)
-(set-face-attribute 'phi-search-match-face nil
-                    :background (if (eq frame-background-mode 'light)
-                                    "#b5dee9"
-                                  "#194854"))
+(defface phi-search-match-face
+  '((((background light)) (:background "#b5dee9"))
+    (t (:background "#194854")))
+  "Face used to highlight matching items in phi-search.")
 
-(make-face 'phi-search-selection-face)
-(set-face-attribute 'phi-search-selection-face nil
-                    :background (if (eq frame-background-mode 'light)
-                                    "#e0d9de"
-                                  "#594854"))
+(defface phi-search-selection-face
+  '((((background light)) (:background "e0d9de"))
+    (t (:background "#594854")))
+  "Face used to highlight selected items in phi-search.")
 
 ;; + utilities
 
