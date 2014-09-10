@@ -32,8 +32,6 @@
 
 ;;; Code:
 
-;; + constant
-
 (defconst phi-search-core-version "1.0.0")
 
 ;; + suppress byte-compiler
@@ -79,11 +77,15 @@
 
 (make-face 'phi-search-match-face)
 (set-face-attribute 'phi-search-match-face nil
-                    :background "#194854")
+                    :background (if (eq frame-background-mode 'light)
+                                    "#b5dee9"
+                                  "#194854"))
 
 (make-face 'phi-search-selection-face)
 (set-face-attribute 'phi-search-selection-face nil
-                    :background "#594854")
+                    :background (if (eq frame-background-mode 'light)
+                                    "#e0d9de"
+                                  "#594854"))
 
 ;; + utilities
 
