@@ -273,6 +273,7 @@ this value must be nil, if nothing is matched.")
    (phi-search--with-sublimity
     (unless (phi-search--select (1+ phi-search--selection))
       (phi-search--select 0)
+      (ding)
       (message "no more matches")))))
 
 (defun phi-search-previous ()
@@ -283,6 +284,7 @@ this value must be nil, if nothing is matched.")
    (phi-search--with-sublimity
     (unless (phi-search--select (1- phi-search--selection))
       (phi-search--select (1- (length phi-search--overlays)))
+      (ding)
       (message "no more matches")))))
 
 (defun phi-search--update (&rest _)
