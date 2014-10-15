@@ -401,6 +401,13 @@ Otherwise yank a word from target buffer and expand query."
     (kill-buffer (current-buffer))
     (delete-window (selected-window))
     (select-window wnd)
+    (unless (null phi-search--original-position)
+      (if (/= (point) phi-search--original-position)
+	  (or (and transient-mark-mode mark-active)
+	      (progn
+		(push-mark phi-search--original-position t)
+		(or executing-kbd-macro (> (minibuffer-depth) 0)
+		    (message "Mark saved where search started"))))))
     (setq phi-search--original-position     nil
           phi-search--filter-function       nil
           phi-search--after-update-function nil
