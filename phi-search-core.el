@@ -87,21 +87,6 @@
 
 ;; + utilities
 
-(defun phi-search--search-backward (query limit &optional filter inclusive)
-  "a handy version of search-backward-regexp"
-  (ignore-errors
-    (let* ((case-fold-search (or (not phi-search-case-sensitive)
-                                 (and (eq phi-search-case-sensitive 'guess)
-                                      (string= query (downcase query)))))
-           (pos1 (point))
-           (pos2 (search-backward-regexp query limit t)))
-      (if (or (and (not inclusive) pos2 (= pos1 pos2))
-              (and filter (not (save-match-data (funcall filter)))))
-          (progn
-            (backward-char 1)
-            (phi-search--search-backward query limit filter t))
-        pos2))))
-
 (defun phi-search--search-forward (query limit &optional filter inclusive)
   "a handy version of search-forward-regexp"
   (ignore-errors
@@ -188,12 +173,17 @@ this value must be nil, if nothing is matched.")
 (defun phi-search--make-overlays-for (query &optional unlimited)
   "make overlays for all matching items in THIS target buffer."
   (save-excursion
-    ;; POINT -> BOF
-    (goto-char phi-search--original-position)
-    (phi-search--make-overlays-for-1 query nil unlimited)
-    ;; EOF -> POINT
-    (goto-char (point-max))
-    (phi-search--make-overlays-for-1 query phi-search--original-position unlimited))
+    (let ((before nil) (after nil) (cnt 0))
+      (goto-char (point-min))
+      (while (and (phi-search--search-forward query nil phi-search--filter-function)
+                  (let ((ov (make-overlay (match-beginning 0) (match-end 0))))
+                    (overlay-put ov 'face 'phi-search-match-face)
+                    (push ov (if (< (match-beginning 0) phi-search--original-position)
+                                 before
+                               after))
+                    (setq cnt (1+ cnt))
+                    (or unlimited (< cnt phi-search-limit)))))
+      (setq phi-search--overlays (nconc (nreverse after) (nreverse before)))))
   (let ((num (length phi-search--overlays)))
     ;; check errors
     (cond ((zerop num)
@@ -203,15 +193,6 @@ this value must be nil, if nothing is matched.")
                 (>= num phi-search-limit))
            (message "more than %d matches" phi-search-limit)
            (phi-search--delete-overlays)))))
-
-(defun phi-search--make-overlays-for-1 (query limit &optional unlimited)
-  (while (and (phi-search--search-backward query limit
-                                           phi-search--filter-function)
-              (let ((ov (make-overlay (match-beginning 0) (match-end 0))))
-                (overlay-put ov 'face 'phi-search-match-face)
-                (add-to-list 'phi-search--overlays ov)
-                (or unlimited
-                    (< (length phi-search--overlays) phi-search-limit))))))
 
 (defun phi-search--select (n)
   "select Nth matching item and go there. return point, or nil for failuare."
