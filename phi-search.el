@@ -207,6 +207,13 @@
      (phi-search--select phi-search--selection))
    ;; run command
    (when cmd (call-interactively cmd))
+   ;; push mark
+   (unless (or (= (point) phi-search--original-position)
+               (use-region-p))
+     (push-mark phi-search--original-position t)
+     (unless (or executing-kbd-macro
+                 (> (minibuffer-depth) 0))
+       (message "Mark saved where search started")))
    ;; clean-up variable
    (setq phi-search--original-region nil)))
 
