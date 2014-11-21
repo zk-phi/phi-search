@@ -1,6 +1,6 @@
 ;;; phi-search-core.el --- another incremental search interface
 
-;; Copyright (C) 2013 zk_phi
+;; Copyright (C) 2013-2014 zk_phi
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
 
 ;;; Code:
 
-(defconst phi-search-core-version "1.0.0")
+(defconst phi-search-core-version "1.2.0")
 
 ;; + suppress byte-compiler
 
@@ -54,22 +54,22 @@
   :group 'phi-search)
 
 (defcustom phi-search-default-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-s") 'phi-search-again-or-next)
-    (define-key map (kbd "C-r") 'phi-search-again-or-previous)
-    (define-key map [remap phi-search] 'phi-search-again-or-next)
-    (define-key map [remap phi-search-backward] 'phi-search-again-or-previous)
-    (define-key map [remap keyboard-quit] 'phi-search-abort)
-    (define-key map [remap scroll-up] 'phi-search-scroll-up)
-    (define-key map [remap pager-page-down] 'phi-search-scroll-up)
-    (define-key map [remap scroll-down] 'phi-search-scroll-down)
-    (define-key map [remap pager-page-up] 'phi-search-scroll-down)
-    (define-key map [remap recenter] 'phi-search-recenter)
-    (define-key map [remap kill-region] 'phi-search-yank-word)
-    (define-key map [remap phi-rectangle-kill-region] 'phi-search-yank-word)
-    (define-key map (kbd "RET") 'phi-search-complete)
-    (define-key map (kbd "C-c C-c") 'phi-search-unlimit)
-    map)
+  (let ((kmap (make-sparse-keymap)))
+    (define-key kmap (kbd "C-s") 'phi-search-again-or-next)
+    (define-key kmap (kbd "C-r") 'phi-search-again-or-previous)
+    (define-key kmap [remap phi-search] 'phi-search-again-or-next)
+    (define-key kmap [remap phi-search-backward] 'phi-search-again-or-previous)
+    (define-key kmap [remap keyboard-quit] 'phi-search-abort)
+    (define-key kmap [remap scroll-up] 'phi-search-scroll-up)
+    (define-key kmap [remap pager-page-down] 'phi-search-scroll-up)
+    (define-key kmap [remap scroll-down] 'phi-search-scroll-down)
+    (define-key kmap [remap pager-page-up] 'phi-search-scroll-down)
+    (define-key kmap [remap recenter] 'phi-search-recenter)
+    (define-key kmap [remap kill-region] 'phi-search-yank-word)
+    (define-key kmap [remap phi-rectangle-kill-region] 'phi-search-yank-word)
+    (define-key kmap (kbd "RET") 'phi-search-complete)
+    (define-key kmap (kbd "C-c C-c") 'phi-search-unlimit)
+    kmap)
   "keymap for the phi-search prompt buffers"
   :group 'phi-search)
 
@@ -361,10 +361,10 @@ Otherwise yank a word from target buffer and expand query."
     (switch-to-buffer (generate-new-buffer "*phi-search*"))
     (add-hook 'after-change-functions 'phi-search--update nil t)
     (use-local-map
-     (let ((map (copy-keymap phi-search-default-map)))
+     (let ((kmap (copy-keymap phi-search-default-map)))
        (dolist (bind (reverse keybinds))
-         (eval `(define-key map ,(car bind) ,(cdr bind))))
-       map))
+         (eval `(define-key kmap ,(car bind) ,(cdr bind))))
+       kmap))
     (setq mode-line-format                     modeline-fmt
           phi-search--target                   (cons wnd buf)
           phi-search--before-complete-function complete-fn)))
