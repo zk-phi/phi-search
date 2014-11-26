@@ -161,7 +161,7 @@ this value must be nil, if nothing is matched.")
   "function called IN THE TARGET BUFFER as soon as overlays are updated")
 (make-variable-buffer-local 'phi-search--after-update-function)
 
-(defvar phi-search--convert-query-function 'identity
+(defvar phi-search--convert-query-function nil
   "function which converts search query.")
 (make-variable-buffer-local 'phi-search--convert-query-function)
 
@@ -178,7 +178,8 @@ this value must be nil, if nothing is matched.")
 
 (defun phi-search--make-overlays-for (query &optional unlimited)
   "make overlays for all matching items in THIS target buffer."
-  (setq query (funcall phi-search--convert-query-function query))
+  (when phi-search--convert-query-function
+    (setq query (funcall phi-search--convert-query-function query)))
   (save-excursion
     (let ((before nil) (after nil) (cnt 0))
       (goto-char (point-min))
