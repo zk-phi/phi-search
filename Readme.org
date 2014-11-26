@@ -37,19 +37,19 @@ start searching. In the window, following commands are available.
 
   Similar to phi-search-again-or-next, but move to the previous item.
 
-- phi-search-scroll-up (replaces "scroll-up")
+- phi-search-scroll-up (replaces "scroll-up-command", defualt [C-v])
 
   Scroll the target window up, to check candidates.
 
-- phi-search-scroll-down (replaces "scroll-down")
+- phi-search-scroll-down (replaces "scroll-down-command", default [M-v])
 
   Scroll the target window down.
 
-- phi-search-recenter (replaces "recenter")
+- phi-search-recenter (replaces "recenter", default [C-l])
 
   Recenter the target window.
 
-- phi-search-yank-word (replaces "kill-region")
+- phi-search-yank-word (replaces "kill-region", default [C-w])
 
   Expand query by yanking one word from the target buffer.
 
