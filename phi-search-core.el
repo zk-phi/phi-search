@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.2.0
+;; Version: 1.2.1
 
 ;;; Commentary:
 
@@ -29,10 +29,11 @@
 ;; 1.0.0 divided from phi-search.el 1.2.1
 ;; 1.1.0 handle "isearch-open-invisible" properties
 ;; 1.2.0 implement "guess" option for "phi-search-case-sensitive"
+;; 1.2.1 add variable "convert-query-function"
 
 ;;; Code:
 
-(defconst phi-search-core-version "1.2.0")
+(defconst phi-search-core-version "1.2.1")
 
 ;; + suppress byte-compiler
 
@@ -160,6 +161,10 @@ this value must be nil, if nothing is matched.")
   "function called IN THE TARGET BUFFER as soon as overlays are updated")
 (make-variable-buffer-local 'phi-search--after-update-function)
 
+(defvar phi-search--convert-query-function 'identity
+  "function which converts search query.")
+(make-variable-buffer-local 'phi-search--convert-query-function)
+
 ;; ++ functions
 
 (defun phi-search--delete-overlays (&optional keep-point)
@@ -173,6 +178,7 @@ this value must be nil, if nothing is matched.")
 
 (defun phi-search--make-overlays-for (query &optional unlimited)
   "make overlays for all matching items in THIS target buffer."
+  (setq query (funcall phi-search--convert-query-function query))
   (save-excursion
     (let ((before nil) (after nil) (cnt 0))
       (goto-char (point-min))
@@ -350,12 +356,13 @@ Otherwise yank a word from target buffer and expand query."
 
 ;; + start/end phi-search
 
-(defun phi-search--initialize (modeline-fmt keybinds filter-fn update-fn complete-fn)
-  (setq phi-search--original-position     (point)
-        phi-search--filter-function       filter-fn
-        phi-search--after-update-function update-fn
-        phi-search--selection             nil
-        phi-search--overlays              nil)
+(defun phi-search--initialize (modeline-fmt keybinds filter-fn update-fn complete-fn &optional conv-fn)
+  (setq phi-search--original-position      (point)
+        phi-search--filter-function        filter-fn
+        phi-search--after-update-function  update-fn
+        phi-search--convert-query-function conv-fn
+        phi-search--selection              nil
+        phi-search--overlays               nil)
   (let ((wnd (selected-window))
         (buf (current-buffer)))
     (select-window (split-window-vertically -4))
@@ -383,12 +390,13 @@ Otherwise yank a word from target buffer and expand query."
     (kill-buffer (current-buffer))
     (delete-window (selected-window))
     (select-window wnd)
-    (setq phi-search--original-position     nil
-          phi-search--filter-function       nil
-          phi-search--after-update-function nil
-          phi-search--selection             nil
-          phi-search--overlays              nil
-          phi-search--last-executed         str)))
+    (setq phi-search--original-position      nil
+          phi-search--filter-function        nil
+          phi-search--after-update-function  nil
+          phi-search--convert-query-function nil
+          phi-search--selection              nil
+          phi-search--overlays               nil
+          phi-search--last-executed          str)))
 
 (defun phi-search-abort ()
   "abort phi-search"
