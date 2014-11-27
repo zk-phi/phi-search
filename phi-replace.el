@@ -110,8 +110,8 @@
                     (not (y-or-n-p (format "replace with %s ?" str))))
                (delete-overlay ov)
              (goto-char (overlay-start ov))
-             (delete-region (overlay-start ov) (overlay-end ov))
-             (insert str))))
+             (looking-at query)
+             (replace-match str))))
        (goto-char (overlay-start orig-cursor))))
    (when phi-replace--original-restriction
      (let ((beg (car phi-replace--original-restriction))
