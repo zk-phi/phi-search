@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.2.1
+;; Version: 1.2.3
 
 ;;; Commentary:
 
@@ -26,14 +26,16 @@
 
 ;;; Change Log:
 
-;; 1.0.0 divided from phi-search.el 1.2.1
+;; 1.0.0 divided from phi-search.el 1.2.2
 ;; 1.1.0 handle "isearch-open-invisible" properties
 ;; 1.2.0 implement "guess" option for "phi-search-case-sensitive"
 ;; 1.2.1 add variable "convert-query-function"
+;; 1.2.2 add customizable variable "phi-search-hook"
+;; 1.2.3 bug fix
 
 ;;; Code:
 
-(defconst phi-search-core-version "1.2.1")
+(defconst phi-search-core-version "1.2.3")
 
 ;; + suppress byte-compiler
 
@@ -75,6 +77,10 @@
   "keymap for the phi-search prompt buffers"
   :group 'phi-search)
 
+(defcustom phi-search-hook nil
+  "hook run when phi-search buffer is prepared."
+  :group 'phi-search)
+
 ;; + faces
 
 (defface phi-search-match-face
@@ -90,7 +96,8 @@
 ;; + utilities
 
 (defun phi-search--search-forward (query limit &optional filter inclusive)
-  "a handy version of search-forward-regexp"
+  "a handy version of search-forward-regexp. zero-width match is
+accepted only when INCLUSIVE is non-nil."
   (ignore-errors
     (let* ((case-fold-search (or (not phi-search-case-sensitive)
                                  (and (eq phi-search-case-sensitive 'guess)
@@ -161,10 +168,6 @@ this value must be nil, if nothing is matched.")
   "function called IN THE TARGET BUFFER as soon as overlays are updated")
 (make-variable-buffer-local 'phi-search--after-update-function)
 
-(defvar phi-search--convert-query-function nil
-  "function which converts search query.")
-(make-variable-buffer-local 'phi-search--convert-query-function)
-
 ;; ++ functions
 
 (defun phi-search--delete-overlays (&optional keep-point)
@@ -178,8 +181,6 @@ this value must be nil, if nothing is matched.")
 
 (defun phi-search--make-overlays-for (query &optional unlimited)
   "make overlays for all matching items in THIS target buffer."
-  (when phi-search--convert-query-function
-    (setq query (funcall phi-search--convert-query-function query)))
   (save-excursion
     (let ((before nil) (after nil) (cnt 0))
       (goto-char (point-min))
@@ -230,6 +231,10 @@ this value must be nil, if nothing is matched.")
   "function called before phi-search ends")
 (make-variable-buffer-local 'phi-search--before-complete-function)
 
+(defvar phi-search--convert-query-function nil
+  "function which converts search query.")
+(make-variable-buffer-local 'phi-search--convert-query-function)
+
 ;; ++ functions
 
 (defmacro phi-search--with-target-buffer (&rest body)
@@ -245,7 +250,9 @@ this value must be nil, if nothing is matched.")
             (error "phi-search: target buffer is killed")))
      ;; visit the window, with variables from the prompt buffer
      (let ((target phi-search--target)
-           (query (buffer-string)))
+           (query (if (null phi-search--convert-query-function)
+                      (buffer-string)
+                    (funcall phi-search--convert-query-function (buffer-string)))))
        (with-selected-window (car target)
          ;; if buffer is switched, switch back to the target
          (unless (eq (current-buffer) (cdr target))
@@ -361,7 +368,6 @@ Otherwise yank a word from target buffer and expand query."
   (setq phi-search--original-position      (point)
         phi-search--filter-function        filter-fn
         phi-search--after-update-function  update-fn
-        phi-search--convert-query-function conv-fn
         phi-search--selection              nil
         phi-search--overlays               nil)
   (let ((wnd (selected-window))
@@ -376,7 +382,9 @@ Otherwise yank a word from target buffer and expand query."
        kmap))
     (setq mode-line-format                     modeline-fmt
           phi-search--target                   (cons wnd buf)
-          phi-search--before-complete-function complete-fn)))
+          phi-search--convert-query-function   conv-fn
+          phi-search--before-complete-function complete-fn)
+    (run-hooks 'phi-search-hook)))
 
 (defun phi-search-complete (&rest args)
   "finish phi-search. (for developers: ARGS are passed to complete-function)"
@@ -394,7 +402,6 @@ Otherwise yank a word from target buffer and expand query."
     (setq phi-search--original-position      nil
           phi-search--filter-function        nil
           phi-search--after-update-function  nil
-          phi-search--convert-query-function nil
           phi-search--selection              nil
           phi-search--overlays               nil
           phi-search--last-executed          str)))
