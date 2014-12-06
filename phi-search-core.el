@@ -237,6 +237,20 @@ this value must be nil, if nothing is matched.")
 
 ;; ++ functions
 
+(defvar phi-search--last-converted-query nil)
+(defun phi-search--generate-query (q)
+  (cond ((null phi-search--convert-query-function)
+         q)
+        ((and (string= q (car phi-search--last-converted-query))
+              (eq phi-search--convert-query-function
+                  (cddr phi-search--last-converted-query)))
+         (cdr phi-search--last-converted-query))
+        (t
+         (let ((res (funcall phi-search--convert-query-function q)))
+           (setq phi-search--last-converted-query
+                 (cons q (cons phi-search--convert-query-function res)))
+           res))))
+
 (defmacro phi-search--with-target-buffer (&rest body)
   "eval body with the target buffer selected.
 \"target\" and \"query\" are brought from the prompt buffer"
@@ -250,9 +264,7 @@ this value must be nil, if nothing is matched.")
             (error "phi-search: target buffer is killed")))
      ;; visit the window, with variables from the prompt buffer
      (let ((target phi-search--target)
-           (query (if (null phi-search--convert-query-function)
-                      (buffer-string)
-                    (funcall phi-search--convert-query-function (buffer-string)))))
+           (query (phi-search--generate-query (buffer-string))))
        (with-selected-window (car target)
          ;; if buffer is switched, switch back to the target
          (unless (eq (current-buffer) (cdr target))
