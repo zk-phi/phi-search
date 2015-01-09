@@ -93,6 +93,13 @@
     (t (:background "#594854")))
   "Face used to highlight selected items in phi-search.")
 
+(defface phi-search-failpart-face
+  '((t (:foreground "#F92672" :weight bold)))
+  "Face used to highlight mismatch part in #<buffer *phi-search*>.")
+
+(defvar phi-search-fail-pos nil
+  "save position where search fail begin with.")
+
 ;; + utilities
 
 (defun phi-search--search-forward (query limit &optional filter inclusive)
@@ -194,8 +201,12 @@ this value must be nil, if nothing is matched.")
                     (or unlimited (< cnt phi-search-limit)))))
       (setq phi-search--overlays (nconc (nreverse after) (nreverse before)))))
   (let ((num (length phi-search--overlays)))
+    ;; reset
+    (setq phi-search-fail-pos nil)
     ;; check errors
     (cond ((zerop num)
+           (with-current-buffer (get-buffer "*phi-search*")
+             (setq phi-search-fail-pos (1- (point-max))))
            (message "no matches")
            (setq phi-search--selection nil))
           ((and (not unlimited)
@@ -303,7 +314,10 @@ this value must be nil, if nothing is matched.")
     (phi-search--make-overlays-for query)
     (phi-search--select 0)
     (when phi-search--after-update-function
-      (funcall phi-search--after-update-function)))))
+      (funcall phi-search--after-update-function))))
+  (when phi-search-fail-pos
+    (add-text-properties phi-search-fail-pos (point-max) '(face phi-search-failpart-face) (current-buffer)))
+  )
 
 ;; + select commands
 
