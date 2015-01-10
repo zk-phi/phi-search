@@ -1,6 +1,6 @@
 ;;; phi-replace.el --- another replace command building on phi-search
 
-;; Copyright (C) 2013 zk_phi
+;; Copyright (C) 2013-2015 zk_phi
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@
 ;;       changed the default value of phi-replace-weight
 ;; 2.0.1 added phi-replace-init-hook
 ;; 2.0.2 compatible with phi-search-core v1.2.0
+;; 2.1.0 provide '!' for phi-replace-query
 
 ;;; Code:
 
@@ -54,7 +55,7 @@
 
 ;; + constant
 
-(defconst phi-replace-version "2.0.2")
+(defconst phi-replace-version "2.1.0")
 
 ;; + suppress byte-compiler
 
@@ -90,6 +91,9 @@
     (:eval (phi-search--with-target-buffer
             (format " [ %d ]" (length phi-search--overlays))))))
 
+(defun phi-replace--y-or-n ()
+  )
+
 (defun phi-replace--complete-function ()
   ;; if the query is blank, use the last query
   (when (and (string= (buffer-string) "")
@@ -107,7 +111,12 @@
            (sit-for phi-replace-weight))
          (let ((ov (nth n phi-search--overlays)))
            (if (and phi-replace--query-mode
-                    (not (y-or-n-p (format "replace with %s ?" str))))
+                    (let ((ch (read-char-choice
+                               (format "replace with %s (y, n or !) ? " str)
+                               '(?y ?n ?!))))
+                      (if (= ch ?!)
+                          (setq phi-replace--query-mode nil)
+                        (= ch ?n))))
                (delete-overlay ov)
              (goto-char (overlay-start ov))
              (looking-at query)
