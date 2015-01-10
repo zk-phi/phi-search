@@ -32,10 +32,11 @@
 ;; 1.2.1 add variable "convert-query-function"
 ;; 1.2.2 add customizable variable "phi-search-hook"
 ;; 1.2.3 bug fix
+;; 1.3.0 add highlight to mismatch part of search string
 
 ;;; Code:
 
-(defconst phi-search-core-version "1.2.3")
+(defconst phi-search-core-version "1.3.0")
 
 ;; + suppress byte-compiler
 
@@ -89,16 +90,13 @@
   "Face used to highlight matching items in phi-search.")
 
 (defface phi-search-selection-face
-  '((((background light)) (:background "e0d9de"))
+  '((((background light)) (:background "#e0d9de"))
     (t (:background "#594854")))
   "Face used to highlight selected items in phi-search.")
 
 (defface phi-search-failpart-face
-  '((t (:foreground "#F92672" :weight bold)))
-  "Face used to highlight mismatch part in #<buffer *phi-search*>.")
-
-(defvar phi-search-fail-pos nil
-  "save position where search fail begin with.")
+  '((t (:inherit 'isearch-fail)))
+  "Face used to highlight mismatch part in phi-search buffer.")
 
 ;; + utilities
 
@@ -166,6 +164,12 @@ accepted only when INCLUSIVE is non-nil."
   "overlays currently active in this target buffer. is ordered.")
 (make-variable-buffer-local 'phi-search--overlays)
 
+(defvar phi-search--failed nil
+  "non-nil if the last search was failure. `phi-search--overlays'
+  can be nil on both failure and too-many-matches error, but this
+  variable become non-nil only on failure.")
+(make-variable-buffer-local 'phi-search--failed)
+
 (defvar phi-search--selection nil
   "stores which item is currently selected.
 this value must be nil, if nothing is matched.")
@@ -201,18 +205,16 @@ this value must be nil, if nothing is matched.")
                     (or unlimited (< cnt phi-search-limit)))))
       (setq phi-search--overlays (nconc (nreverse after) (nreverse before)))))
   (let ((num (length phi-search--overlays)))
-    ;; reset
-    (setq phi-search-fail-pos nil)
-    ;; check errors
     (cond ((zerop num)
-           (with-current-buffer (get-buffer "*phi-search*")
-             (setq phi-search-fail-pos (1- (point-max))))
            (message "no matches")
-           (setq phi-search--selection nil))
-          ((and (not unlimited)
-                (>= num phi-search-limit))
-           (message "more than %d matches" phi-search-limit)
-           (phi-search--delete-overlays)))))
+           (setq phi-search--selection nil
+                 phi-search--failed    t))
+          (t
+           (setq phi-search--failed nil)
+           (when (and (not unlimited)
+                      (>= num phi-search-limit))
+             (message "more than %d matches" phi-search-limit)
+             (phi-search--delete-overlays))))))
 
 (defun phi-search--select (n)
   "select Nth matching item and go there. return point, or nil for failuare."
@@ -245,6 +247,10 @@ this value must be nil, if nothing is matched.")
 (defvar phi-search--convert-query-function nil
   "function which converts search query.")
 (make-variable-buffer-local 'phi-search--convert-query-function)
+
+(defvar phi-search--fail-pos nil
+  "save position where search fail begin with.")
+(make-variable-buffer-local 'phi-search--fail-pos)
 
 ;; ++ functions
 
@@ -315,9 +321,12 @@ this value must be nil, if nothing is matched.")
     (phi-search--select 0)
     (when phi-search--after-update-function
       (funcall phi-search--after-update-function))))
-  (when phi-search-fail-pos
-    (add-text-properties phi-search-fail-pos (point-max) '(face phi-search-failpart-face) (current-buffer)))
-  )
+  (if (not (phi-search--with-target-buffer phi-search--failed))
+      (setq phi-search--fail-pos nil)
+    (unless phi-search--fail-pos
+      (setq phi-search--fail-pos (1- (point-max))))
+    (put-text-property
+     phi-search--fail-pos (point-max) 'face 'phi-search-failpart-face)))
 
 ;; + select commands
 
