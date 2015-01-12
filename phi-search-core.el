@@ -322,12 +322,15 @@ this value must be nil, if nothing is matched.")
     (phi-search--select 0)
     (when phi-search--after-update-function
       (funcall phi-search--after-update-function))))
-  (if (not (phi-search--with-target-buffer phi-search--failed))
-      (setq phi-search--fail-pos nil)
+  (cond
+   ((phi-search--with-target-buffer phi-search--failed)
     (unless phi-search--fail-pos
       (setq phi-search--fail-pos (1- (point-max))))
     (put-text-property
-     phi-search--fail-pos (point-max) 'face 'phi-search-failpart-face)))
+     phi-search--fail-pos (point-max) 'face 'phi-search-failpart-face))
+   (t
+    (setq phi-search--fail-pos nil)
+    (put-text-property (point-min) (point-max) 'face nil))))
 
 ;; + select commands
 
