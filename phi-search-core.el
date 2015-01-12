@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.3.0
+;; Version: 1.3.1
 
 ;;; Commentary:
 
@@ -33,10 +33,11 @@
 ;; 1.2.2 add customizable variable "phi-search-hook"
 ;; 1.2.3 bug fix
 ;; 1.3.0 add highlight to mismatch part of search string
+;; 1.3.1 add support for subword/jaword-mode
 
 ;;; Code:
 
-(defconst phi-search-core-version "1.3.0")
+(defconst phi-search-core-version "1.3.1")
 
 ;; + suppress byte-compiler
 
@@ -384,6 +385,8 @@ this value must be nil, if nothing is matched.")
     (when phi-search--after-update-function
       (funcall phi-search--after-update-function)))))
 
+(declare-function subword-forward "subword" (&optional arg))
+(declare-function jaword-forward "jaword" (&optional arg))
 (defun phi-search-yank-word ()
   "If there's a region in query buffer, kill-region as usual.
 Otherwise yank a word from target buffer and expand query."
@@ -394,7 +397,11 @@ Otherwise yank a word from target buffer and expand query."
        (phi-search--with-target-buffer
         (buffer-substring-no-properties
          (point)
-         (save-excursion (forward-word) (point)))))
+         (save-excursion
+           (cond ((and (boundp 'jaword-mode) jaword-mode) (jaword-forward 1))
+                 ((and (boundp 'subword-mode) subword-mode) (subword-forward 1))
+                 (t (forward-word)))
+           (point)))))
     (kill-region (region-beginning) (region-end))))
 
 ;; + start/end phi-search
