@@ -91,9 +91,6 @@
     (:eval (phi-search--with-target-buffer
             (format " [ %d ]" (length phi-search--overlays))))))
 
-(defun phi-replace--y-or-n ()
-  )
-
 (defun phi-replace--complete-function ()
   ;; if the query is blank, use the last query
   (when (and (string= (buffer-string) "")
