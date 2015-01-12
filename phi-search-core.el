@@ -434,11 +434,11 @@ Otherwise yank a word from target buffer and expand query."
 (defun phi-search-complete (&rest args)
   "finish phi-search. (for developers: ARGS are passed to complete-function)"
   (interactive)
-  (phi-search--open-invisible-permanently)
   (when phi-search--before-complete-function
     (apply phi-search--before-complete-function args))
   (phi-search--with-target-buffer
-   (phi-search--delete-overlays t))
+   (phi-search--delete-overlays t)
+   (phi-search--open-invisible-permanently))
   (let ((wnd (car phi-search--target))
         (str (buffer-string)))
     (kill-buffer (current-buffer))
