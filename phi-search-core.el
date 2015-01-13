@@ -338,7 +338,7 @@ this value must be nil, if nothing is matched.")
   (interactive)
   (let ((str (phi-search--with-target-buffer
               phi-search--last-executed)))
-    (if (not (string= (buffer-string) ""))
+    (if (not (string= (minibuffer-contents) ""))
         (phi-search-next)
       (when str (insert str)))))
 
@@ -347,7 +347,7 @@ this value must be nil, if nothing is matched.")
   (interactive)
   (let ((str (phi-search--with-target-buffer
               phi-search--last-executed)))
-    (if (not (string= (buffer-string) ""))
+    (if (not (string= (minibuffer-contents) ""))
         (phi-search-previous)
       (when str (insert str)))))
 
@@ -436,19 +436,18 @@ Otherwise yank a word from target buffer and expand query."
   (interactive)
   (when phi-search--before-complete-function
     (apply phi-search--before-complete-function args))
-  (phi-search--with-target-buffer
-   (phi-search--delete-overlays t)
-   (phi-search--open-invisible-permanently))
   (let ((wnd (car phi-search--target))
-        (str (buffer-string)))
-    (exit-minibuffer)
-    (select-window wnd)
-    (setq phi-search--original-position      nil
-          phi-search--filter-function        nil
-          phi-search--after-update-function  nil
-          phi-search--selection              nil
-          phi-search--overlays               nil
-          phi-search--last-executed          str)))
+        (str (minibuffer-contents)))
+    (phi-search--with-target-buffer
+     (phi-search--delete-overlays t)
+     (phi-search--open-invisible-permanently)
+     (setq phi-search--original-position      nil
+           phi-search--filter-function        nil
+           phi-search--after-update-function  nil
+           phi-search--selection              nil
+           phi-search--overlays               nil
+           phi-search--last-executed          str))
+    (exit-minibuffer)))
 
 (defun phi-search-abort ()
   "abort phi-search"

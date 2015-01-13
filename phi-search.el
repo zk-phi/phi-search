@@ -272,7 +272,7 @@
   (phi-search-complete
    `(lambda ()
       (interactive)
-      (when (looking-back ,(buffer-string))
+      (when (looking-back ,(minibuffer-contents))
         (goto-char (match-beginning 0))))))
 
 (defun phi-search-maybe-next-line ()

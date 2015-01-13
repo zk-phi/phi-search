@@ -93,7 +93,7 @@
 
 (defun phi-replace--complete-function ()
   ;; if the query is blank, use the last query
-  (when (and (string= (buffer-string) "")
+  (when (and (string= (minibuffer-contents) "")
              phi-search--last-executed)
     (insert phi-search--last-executed))
   (phi-search--with-target-buffer
