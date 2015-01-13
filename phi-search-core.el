@@ -180,6 +180,10 @@ this value must be nil, if nothing is matched.")
   "function called IN THE TARGET BUFFER as soon as overlays are updated")
 (make-variable-buffer-local 'phi-search--after-update-function)
 
+(defvar phi-search--saved-modeline-format nil
+  "saved modeline-format of the target buffer.")
+(make-variable-buffer-local 'phi-search--saved-modeline-format)
+
 ;; ++ functions
 
 (defun phi-search--delete-overlays (&optional keep-point)
@@ -409,7 +413,9 @@ Otherwise yank a word from target buffer and expand query."
 ;; + start/end phi-search
 
 (defun phi-search--initialize (modeline-fmt keybinds filter-fn update-fn complete-fn &optional conv-fn)
-  (setq phi-search--original-position      (point)
+  (setq phi-search--saved-modeline-format  mode-line-format)
+  (setq mode-line-format                   modeline-fmt
+        phi-search--original-position      (point)
         phi-search--filter-function        filter-fn
         phi-search--after-update-function  update-fn
         phi-search--selection              nil
@@ -419,8 +425,7 @@ Otherwise yank a word from target buffer and expand query."
     (minibuffer-with-setup-hook
         (lambda ()
           (add-hook 'after-change-functions 'phi-search--update nil t)
-          (setq mode-line-format                     modeline-fmt
-                phi-search--target                   (cons wnd buf)
+          (setq phi-search--target                   (cons wnd buf)
                 phi-search--convert-query-function   conv-fn
                 phi-search--before-complete-function complete-fn)
           (run-hooks 'phi-search-hook))
@@ -441,7 +446,8 @@ Otherwise yank a word from target buffer and expand query."
     (phi-search--with-target-buffer
      (phi-search--delete-overlays t)
      (phi-search--open-invisible-permanently)
-     (setq phi-search--original-position      nil
+     (setq mode-line-format                   phi-search--saved-modeline-format
+           phi-search--original-position      nil
            phi-search--filter-function        nil
            phi-search--after-update-function  nil
            phi-search--selection              nil

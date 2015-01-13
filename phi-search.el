@@ -136,10 +136,8 @@
 
 (defcustom phi-search-mode-line-format
   '(" *phi-search*"
-    (:eval (let (total selection)
-             (phi-search--with-target-buffer
-              (setq selection phi-search--selection
-                    total (length phi-search--overlays)))
+    (:eval (let ((total (length phi-search--overlays))
+                 (selection phi-search--selection))
              (when selection
                (format " [ %d / %d ]" (1+ selection) total)))))
   "mode-line-format for phi-search(-backward)"

@@ -88,8 +88,7 @@
 
 (defvar phi-replace--mode-line-format
   '(" *phi-replace*"
-    (:eval (phi-search--with-target-buffer
-            (format " [ %d ]" (length phi-search--overlays))))))
+    (:eval (format " [ %d ]" (length phi-search--overlays)))))
 
 (defun phi-replace--complete-function ()
   ;; if the query is blank, use the last query
