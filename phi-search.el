@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.1.1
+;; Version: 2.2.0
 
 ;;; Commentary:
 
@@ -107,6 +107,7 @@
 ;;       accept prefix-argument
 ;; 2.1.0 handle "isearch-open-invisible" properties
 ;; 2.1.1 compatible with phi-search-core v1.2.0
+;; 2.2.0 compatibility with phi-search-core v2.0.0
 
 ;;; Code:
 
@@ -114,7 +115,7 @@
 
 ;; + constants
 
-(defconst phi-search-version "2.1.1")
+(defconst phi-search-version "2.2.0")
 
 ;; + suppress byte-compiler
 

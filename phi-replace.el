@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.1.0
+;; Version: 2.2.0
 
 ;;; Commentary:
 
@@ -48,6 +48,7 @@
 ;; 2.0.1 added phi-replace-init-hook
 ;; 2.0.2 compatible with phi-search-core v1.2.0
 ;; 2.1.0 provide '!' for phi-replace-query
+;; 2.2.0 compatibility with phi-search-core v2.0.0
 
 ;;; Code:
 
@@ -55,7 +56,7 @@
 
 ;; + constant
 
-(defconst phi-replace-version "2.1.0")
+(defconst phi-replace-version "2.2.0")
 
 ;; + suppress byte-compiler
 
