@@ -411,7 +411,8 @@ Otherwise yank a word from target buffer and expand query."
 ;; + start/end phi-search
 
 (defun phi-search--initialize (modeline-fmt keybinds filter-fn
-                                            update-fn complete-fn &optional conv-fn)
+                                            update-fn complete-fn
+                                            &optional conv-fn init-fn)
   (setq phi-search--saved-modeline-format  mode-line-format)
   (setq mode-line-format                   modeline-fmt
         phi-search--original-position      (point)
@@ -427,7 +428,8 @@ Otherwise yank a word from target buffer and expand query."
           (setq phi-search--target                   (cons wnd buf)
                 phi-search--convert-query-function   conv-fn
                 phi-search--before-complete-function complete-fn)
-          (run-hooks 'phi-search-hook))
+          (run-hooks 'phi-search-hook)
+          (funcall init-fn))
       (read-from-minibuffer
        "phi-search: " nil
        (let ((kmap (copy-keymap phi-search-default-map)))
