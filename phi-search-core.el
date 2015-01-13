@@ -452,8 +452,9 @@ Otherwise yank a word from target buffer and expand query."
            phi-search--after-update-function  nil
            phi-search--selection              nil
            phi-search--overlays               nil
-           phi-search--last-executed          str))
-    (exit-minibuffer)))
+           phi-search--last-executed          str)))
+  (exit-minibuffer)         ; exit-minibuffer must be called at last
+  )
 
 (defun phi-search-abort ()
   "abort phi-search"
