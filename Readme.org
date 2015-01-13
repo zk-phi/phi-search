@@ -8,10 +8,6 @@ another incremental search command, compatible with "multiple-cursors"
 
 [[img/search.gif]]
 
-** [NOTE] "phi-replace-case-sensitive" IS REMOVED IN THE LATEST VERSION
-
-now use the same value as phi-search-case-sensitive.
-
 ** Usage
 
 Require this script
