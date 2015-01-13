@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.3.1
+;; Version: 2.0.0
 
 ;;; Commentary:
 
@@ -34,15 +34,11 @@
 ;; 1.2.3 bug fix
 ;; 1.3.0 add highlight to mismatch part of search string
 ;; 1.3.1 add support for subword/jaword-mode
+;; 2.0.0 use minibuffer to read query
 
 ;;; Code:
 
-(defconst phi-search-core-version "1.3.1")
-
-;; + suppress byte-compiler
-
-(declare-function sublimity--pre-command "sublimity")
-(declare-function sublimity--post-command "sublimity")
+(defconst phi-search-core-version "2.0.0")
 
 ;; + customs
 
@@ -137,6 +133,8 @@ accepted only when INCLUSIVE is non-nil."
             (when ioi (funcall ioi ov))))
         (overlays-at (point))))
 
+(declare-function sublimity--pre-command "sublimity")
+(declare-function sublimity--post-command "sublimity")
 (defmacro phi-search--with-sublimity (&rest body)
   "if sublimity is installed, use it"
   `(if (and (boundp 'sublimity-mode) sublimity-mode)
@@ -180,6 +178,10 @@ this value must be nil, if nothing is matched.")
   "function called IN THE TARGET BUFFER as soon as overlays are updated")
 (make-variable-buffer-local 'phi-search--after-update-function)
 
+(defvar phi-search--saved-modeline-format nil
+  "saved modeline-format of the target buffer.")
+(make-variable-buffer-local 'phi-search--saved-modeline-format)
+
 ;; ++ functions
 
 (defun phi-search--delete-overlays (&optional keep-point)
@@ -207,7 +209,6 @@ this value must be nil, if nothing is matched.")
       (setq phi-search--overlays (nconc (nreverse after) (nreverse before)))))
   (let ((num (length phi-search--overlays)))
     (cond ((zerop num)
-           (message "no matches")
            (setq phi-search--selection nil
                  phi-search--failed    t))
           (t
@@ -282,12 +283,12 @@ this value must be nil, if nothing is matched.")
             (error "phi-search: target buffer is killed")))
      ;; visit the window, with variables from the prompt buffer
      (let ((target phi-search--target)
-           (query (phi-search--generate-query (buffer-string))))
+           (query (phi-search--generate-query (minibuffer-contents))))
        (with-selected-window (car target)
          ;; if buffer is switched, switch back to the target
          (unless (eq (current-buffer) (cdr target))
            (switch-to-buffer (cdr target))
-           (message "phi-search: buffer is switched"))
+           (message "phi-search: buffer switched"))
          ;; eval body
          ,@body))))
 
@@ -325,12 +326,12 @@ this value must be nil, if nothing is matched.")
   (cond
    ((phi-search--with-target-buffer phi-search--failed)
     (unless phi-search--fail-pos
-      (setq phi-search--fail-pos (1- (point-max))))
+      (setq phi-search--fail-pos (max (minibuffer-prompt-end) (1- (point-max)))))
     (put-text-property
      phi-search--fail-pos (point-max) 'face 'phi-search-failpart-face))
    (t
     (setq phi-search--fail-pos nil)
-    (put-text-property (point-min) (point-max) 'face nil))))
+    (put-text-property (minibuffer-prompt-end) (point-max) 'face nil))))
 
 ;; + select commands
 
@@ -339,7 +340,7 @@ this value must be nil, if nothing is matched.")
   (interactive)
   (let ((str (phi-search--with-target-buffer
               phi-search--last-executed)))
-    (if (not (string= (buffer-string) ""))
+    (if (not (string= (minibuffer-contents) ""))
         (phi-search-next)
       (when str (insert str)))))
 
@@ -348,7 +349,7 @@ this value must be nil, if nothing is matched.")
   (interactive)
   (let ((str (phi-search--with-target-buffer
               phi-search--last-executed)))
-    (if (not (string= (buffer-string) ""))
+    (if (not (string= (minibuffer-contents) ""))
         (phi-search-previous)
       (when str (insert str)))))
 
@@ -409,47 +410,50 @@ Otherwise yank a word from target buffer and expand query."
 
 ;; + start/end phi-search
 
-(defun phi-search--initialize (modeline-fmt keybinds filter-fn update-fn complete-fn &optional conv-fn)
-  (setq phi-search--original-position      (point)
+(defun phi-search--initialize (modeline-fmt keybinds filter-fn
+                                            update-fn complete-fn &optional conv-fn)
+  (setq phi-search--saved-modeline-format  mode-line-format)
+  (setq mode-line-format                   modeline-fmt
+        phi-search--original-position      (point)
         phi-search--filter-function        filter-fn
         phi-search--after-update-function  update-fn
         phi-search--selection              nil
         phi-search--overlays               nil)
   (let ((wnd (selected-window))
         (buf (current-buffer)))
-    (select-window (split-window-vertically -4))
-    (switch-to-buffer (generate-new-buffer "*phi-search*"))
-    (add-hook 'after-change-functions 'phi-search--update nil t)
-    (use-local-map
-     (let ((kmap (copy-keymap phi-search-default-map)))
-       (dolist (bind (reverse keybinds))
-         (eval `(define-key kmap ,(car bind) ,(cdr bind))))
-       kmap))
-    (setq mode-line-format                     modeline-fmt
-          phi-search--target                   (cons wnd buf)
-          phi-search--convert-query-function   conv-fn
-          phi-search--before-complete-function complete-fn)
-    (run-hooks 'phi-search-hook)))
+    (minibuffer-with-setup-hook
+        (lambda ()
+          (add-hook 'after-change-functions 'phi-search--update nil t)
+          (setq phi-search--target                   (cons wnd buf)
+                phi-search--convert-query-function   conv-fn
+                phi-search--before-complete-function complete-fn)
+          (run-hooks 'phi-search-hook))
+      (read-from-minibuffer
+       "phi-search: " nil
+       (let ((kmap (copy-keymap phi-search-default-map)))
+         (dolist (bind (reverse keybinds))
+           (eval `(define-key kmap ,(car bind) ,(cdr bind))))
+         kmap)))))
 
 (defun phi-search-complete (&rest args)
   "finish phi-search. (for developers: ARGS are passed to complete-function)"
   (interactive)
   (when phi-search--before-complete-function
     (apply phi-search--before-complete-function args))
-  (phi-search--with-target-buffer
-   (phi-search--delete-overlays t)
-   (phi-search--open-invisible-permanently))
   (let ((wnd (car phi-search--target))
-        (str (buffer-string)))
-    (kill-buffer (current-buffer))
-    (delete-window (selected-window))
-    (select-window wnd)
-    (setq phi-search--original-position      nil
-          phi-search--filter-function        nil
-          phi-search--after-update-function  nil
-          phi-search--selection              nil
-          phi-search--overlays               nil
-          phi-search--last-executed          str)))
+        (str (minibuffer-contents)))
+    (phi-search--with-target-buffer
+     (phi-search--delete-overlays t)
+     (phi-search--open-invisible-permanently)
+     (setq mode-line-format                   phi-search--saved-modeline-format
+           phi-search--original-position      nil
+           phi-search--filter-function        nil
+           phi-search--after-update-function  nil
+           phi-search--selection              nil
+           phi-search--overlays               nil
+           phi-search--last-executed          str)))
+  (exit-minibuffer)         ; exit-minibuffer must be called at last
+  )
 
 (defun phi-search-abort ()
   "abort phi-search"

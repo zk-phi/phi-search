@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.1.1
+;; Version: 2.2.0
 
 ;;; Commentary:
 
@@ -107,6 +107,7 @@
 ;;       accept prefix-argument
 ;; 2.1.0 handle "isearch-open-invisible" properties
 ;; 2.1.1 compatible with phi-search-core v1.2.0
+;; 2.2.0 compatibility with phi-search-core v2.0.0
 
 ;;; Code:
 
@@ -114,7 +115,7 @@
 
 ;; + constants
 
-(defconst phi-search-version "2.1.1")
+(defconst phi-search-version "2.2.0")
 
 ;; + suppress byte-compiler
 
@@ -136,10 +137,8 @@
 
 (defcustom phi-search-mode-line-format
   '(" *phi-search*"
-    (:eval (let (total selection)
-             (phi-search--with-target-buffer
-              (setq selection phi-search--selection
-                    total (length phi-search--overlays)))
+    (:eval (let ((total (length phi-search--overlays))
+                 (selection phi-search--selection))
              (when selection
                (format " [ %d / %d ]" (1+ selection) total)))))
   "mode-line-format for phi-search(-backward)"
@@ -272,7 +271,7 @@
   (phi-search-complete
    `(lambda ()
       (interactive)
-      (when (looking-back ,(buffer-string))
+      (when (looking-back ,(minibuffer-contents))
         (goto-char (match-beginning 0))))))
 
 (defun phi-search-maybe-next-line ()

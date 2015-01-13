@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.1.0
+;; Version: 2.2.0
 
 ;;; Commentary:
 
@@ -48,6 +48,7 @@
 ;; 2.0.1 added phi-replace-init-hook
 ;; 2.0.2 compatible with phi-search-core v1.2.0
 ;; 2.1.0 provide '!' for phi-replace-query
+;; 2.2.0 compatibility with phi-search-core v2.0.0
 
 ;;; Code:
 
@@ -55,7 +56,7 @@
 
 ;; + constant
 
-(defconst phi-replace-version "2.1.0")
+(defconst phi-replace-version "2.2.0")
 
 ;; + suppress byte-compiler
 
@@ -88,19 +89,19 @@
 
 (defvar phi-replace--mode-line-format
   '(" *phi-replace*"
-    (:eval (phi-search--with-target-buffer
-            (format " [ %d ]" (length phi-search--overlays))))))
+    (:eval (format " [ %d ]" (length phi-search--overlays)))))
 
 (defun phi-replace--complete-function ()
   ;; if the query is blank, use the last query
-  (when (and (string= (buffer-string) "")
+  (when (and (string= (minibuffer-contents) "")
              phi-search--last-executed)
     (insert phi-search--last-executed))
   (phi-search--with-target-buffer
    (when phi-search--overlays
-     (let ((orig-cursor (make-overlay phi-search--original-position
-                                      phi-search--original-position))
-           (str (read-from-minibuffer "replace with ? ")))
+     (let* ((orig-cursor (make-overlay phi-search--original-position
+                                       phi-search--original-position))
+            (enable-recursive-minibuffers t)
+            (str (read-from-minibuffer "replace with ? ")))
        (dotimes (n (length phi-search--overlays))
          (phi-search--with-sublimity
           (phi-search--select n))
