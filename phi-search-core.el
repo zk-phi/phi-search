@@ -39,11 +39,6 @@
 
 (defconst phi-search-core-version "1.3.1")
 
-;; + suppress byte-compiler
-
-(declare-function sublimity--pre-command "sublimity")
-(declare-function sublimity--post-command "sublimity")
-
 ;; + customs
 
 (defgroup phi-search nil
@@ -137,6 +132,9 @@ accepted only when INCLUSIVE is non-nil."
             (when ioi (funcall ioi ov))))
         (overlays-at (point))))
 
+
+(declare-function sublimity--pre-command "sublimity")
+(declare-function sublimity--post-command "sublimity")
 (defmacro phi-search--with-sublimity (&rest body)
   "if sublimity is installed, use it"
   `(if (and (boundp 'sublimity-mode) sublimity-mode)
