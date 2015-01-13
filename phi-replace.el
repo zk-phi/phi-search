@@ -137,8 +137,9 @@
     (deactivate-mark))
   (phi-search--initialize
    phi-replace--mode-line-format phi-replace-additional-keybinds nil nil
-   'phi-replace--complete-function)
-  (run-hooks 'phi-replace-init-hook))
+   'phi-replace--complete-function
+   nil
+   (lambda () (run-hooks 'phi-replace-init-hook))))
 
 ;; + commands
 
