@@ -132,7 +132,6 @@ accepted only when INCLUSIVE is non-nil."
             (when ioi (funcall ioi ov))))
         (overlays-at (point))))
 
-
 (declare-function sublimity--pre-command "sublimity")
 (declare-function sublimity--post-command "sublimity")
 (defmacro phi-search--with-sublimity (&rest body)
@@ -288,7 +287,7 @@ this value must be nil, if nothing is matched.")
          ;; if buffer is switched, switch back to the target
          (unless (eq (current-buffer) (cdr target))
            (switch-to-buffer (cdr target))
-           (message "phi-search: buffer is switched"))
+           (message "phi-search: buffer switched"))
          ;; eval body
          ,@body))))
 
@@ -326,7 +325,7 @@ this value must be nil, if nothing is matched.")
   (cond
    ((phi-search--with-target-buffer phi-search--failed)
     (unless phi-search--fail-pos
-      (setq phi-search--fail-pos (1- (point-max))))
+      (setq phi-search--fail-pos (max (minibuffer-prompt-end) (1- (point-max)))))
     (put-text-property
      phi-search--fail-pos (point-max) 'face 'phi-search-failpart-face))
    (t
@@ -410,7 +409,8 @@ Otherwise yank a word from target buffer and expand query."
 
 ;; + start/end phi-search
 
-(defun phi-search--initialize (modeline-fmt keybinds filter-fn update-fn complete-fn &optional conv-fn)
+(defun phi-search--initialize (modeline-fmt keybinds filter-fn
+                                            update-fn complete-fn &optional conv-fn)
   (setq phi-search--saved-modeline-format  mode-line-format)
   (setq mode-line-format                   modeline-fmt
         phi-search--original-position      (point)

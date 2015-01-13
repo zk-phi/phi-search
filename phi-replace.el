@@ -97,9 +97,10 @@
     (insert phi-search--last-executed))
   (phi-search--with-target-buffer
    (when phi-search--overlays
-     (let ((orig-cursor (make-overlay phi-search--original-position
-                                      phi-search--original-position))
-           (str (read-from-minibuffer "replace with ? ")))
+     (let* ((orig-cursor (make-overlay phi-search--original-position
+                                       phi-search--original-position))
+            (enable-recursive-minibuffers t)
+            (str (read-from-minibuffer "replace with ? ")))
        (dotimes (n (length phi-search--overlays))
          (phi-search--with-sublimity
           (phi-search--select n))
