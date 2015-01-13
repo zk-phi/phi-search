@@ -73,7 +73,8 @@
   "hook run after initialization of phi-replace"
   :group 'phi-search)
 
-(defcustom phi-replace-additional-keybinds '()
+(defcustom phi-replace-additional-keybinds
+  '(([remap phi-search-complete] . 'phi-replace-again-or-complete))
   "additional bindings used in phi-replace"
   :group 'phi-search)
 
@@ -88,14 +89,9 @@
 ;; + start/end phi-replace
 
 (defvar phi-replace--mode-line-format
-  '(" *phi-replace*"
-    (:eval (format " [ %d ]" (length phi-search--overlays)))))
+  '(" *phi-replace*" (:eval (format " [ %d ]" (length phi-search--overlays)))))
 
 (defun phi-replace--complete-function ()
-  ;; if the query is blank, use the last query
-  (when (and (string= (minibuffer-contents) "")
-             phi-search--last-executed)
-    (insert phi-search--last-executed))
   (phi-search--with-target-buffer
    (when phi-search--overlays
      (let* ((orig-cursor (make-overlay phi-search--original-position
@@ -140,8 +136,7 @@
     (narrow-to-region (region-beginning) (region-end))
     (deactivate-mark))
   (phi-search--initialize
-   phi-replace--mode-line-format
-   nil nil nil
+   phi-replace--mode-line-format phi-replace-additional-keybinds nil nil
    'phi-replace--complete-function)
   (run-hooks 'phi-replace-init-hook))
 
@@ -164,6 +159,16 @@
            (eq (selected-window) popwin:popup-window))
       (call-interactively 'query-replace-regexp)
     (phi-replace--initialize t)))
+
+(defun phi-replace-again-or-complete ()
+  "execute phi-replace. if the query is empty, use the last
+  query."
+  (interactive)
+  (let ((str (phi-search--with-target-buffer
+              phi-search--last-executed)))
+    (when (and (string= (minibuffer-contents) "") str)
+      (insert str)))
+  (phi-search-complete))
 
 ;; + provide
 
