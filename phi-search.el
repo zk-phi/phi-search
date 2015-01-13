@@ -230,9 +230,11 @@
        phi-search-additional-keybinds)
      nil
      (when backward 'phi-search--backward-after-update-function)
-     'phi-search--complete-function)
-    (when str (insert str)))
-  (run-hooks 'phi-search-init-hook))
+     'phi-search--complete-function
+     nil
+     (lambda ()
+       (when str (insert str))
+       (run-hooks 'phi-search-init-hook)))))
 
 ;; + commands
 
