@@ -191,7 +191,8 @@
    (let ((command
           (cond ((null phi-search--selection)
                  (lambda () nil))
-                ((string= query phi-search--original-region)
+                ((and phi-search--original-region
+                      (string= query phi-search--original-region))
                  (phi-search--generate-command
                   nil phi-search--selection nil cmd 'use-region))
                 (t
