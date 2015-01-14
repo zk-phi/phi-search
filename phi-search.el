@@ -271,11 +271,12 @@
 
 (defun phi-search-complete-at-beginning ()
   (interactive)
-  (phi-search-complete
-   `(lambda ()
-      (interactive)
-      (when (looking-back ,(minibuffer-contents))
-        (goto-char (match-beginning 0))))))
+  (let ((query (phi-search--with-target-buffer query)))
+    (phi-search-complete
+     `(lambda ()
+        (interactive)
+        (when (looking-back ,query)
+          (goto-char (match-beginning 0)))))))
 
 (defun phi-search-maybe-next-line ()
   "quit phi-search with next-line"
