@@ -103,18 +103,17 @@
 (defun phi-search--search-forward (query limit &optional filter inclusive)
   "a handy version of search-forward-regexp. zero-width match is
 accepted only when INCLUSIVE is non-nil."
-  (ignore-errors
-    (let* ((case-fold-search (or (not phi-search-case-sensitive)
-                                 (and (eq phi-search-case-sensitive 'guess)
-                                      (string= query (downcase query)))))
-           (pos1 (point))
-           (pos2 (search-forward-regexp query limit t)))
-      (if (or (and (not inclusive) pos2 (= pos1 pos2))
-              (and filter (not (save-match-data (funcall filter)))))
-          (progn
-            (forward-char 1)
-            (phi-search--search-forward query limit filter t))
-        pos2))))
+  (let* ((case-fold-search (or (not phi-search-case-sensitive)
+                               (and (eq phi-search-case-sensitive 'guess)
+                                    (string= query (downcase query)))))
+         (pos1 (point))
+         (pos2 (search-forward-regexp query limit t)))
+    (if (or (and (not inclusive) pos2 (= pos1 pos2))
+            (and filter (not (save-match-data (funcall filter)))))
+        (progn
+          (forward-char 1)
+          (phi-search--search-forward query limit filter t))
+      pos2)))
 
 (defun phi-search--open-invisible-temporary (hidep)
   "when nil, show invisible text at point. otherwise hide it."
@@ -135,6 +134,12 @@ accepted only when INCLUSIVE is non-nil."
           (let ((ioi (overlay-get ov 'isearch-open-invisible)))
             (when ioi (funcall ioi ov))))
         (overlays-at (point))))
+
+(defun phi-search--valid-regex-p (regex)
+  "non-nil if REGEX is a valid regular expression"
+  (ignore-errors
+    (string-match regex "")
+    t))
 
 (declare-function sublimity--pre-command "sublimity")
 (declare-function sublimity--post-command "sublimity")
@@ -167,8 +172,9 @@ accepted only when INCLUSIVE is non-nil."
 (make-variable-buffer-local 'phi-search--overlays)
 
 (defvar phi-search--failed nil
-  "non-nil if the last search was failure. `phi-search--overlays'
-  can be nil on both failure and too-many-matches error, but this
+  "non-nil if the last search was failed. 'err especially when
+  the failure is caused by an error. `phi-search--overlays' can
+  be nil on both failure and too-many-matches error, but this
   variable become non-nil only on failure.")
 (make-variable-buffer-local 'phi-search--failed)
 
@@ -198,28 +204,32 @@ this value must be nil, if nothing is matched.")
 
 (defun phi-search--make-overlays-for (query &optional unlimited)
   "make overlays for all matching items in THIS target buffer."
-  (save-excursion
-    (let ((before nil) (after nil) (cnt 0))
-      (goto-char (point-min))
-      (while (and (phi-search--search-forward query nil phi-search--filter-function)
-                  (let ((ov (make-overlay (match-beginning 0) (match-end 0))))
-                    (overlay-put ov 'face 'phi-search-match-face)
-                    (push ov (if (< (match-beginning 0) phi-search--original-position)
-                                 before
-                               after))
-                    (setq cnt (1+ cnt))
-                    (or unlimited (< cnt phi-search-limit)))))
-      (setq phi-search--overlays (nconc (nreverse after) (nreverse before)))))
-  (let ((num (length phi-search--overlays)))
-    (cond ((zerop num)
-           (setq phi-search--selection nil
-                 phi-search--failed    t))
-          (t
-           (setq phi-search--failed nil)
-           (when (and (not unlimited)
-                      (>= num phi-search-limit))
-             (message "more than %d matches" phi-search-limit)
-             (phi-search--delete-overlays))))))
+  (cond
+   ((not (phi-search--valid-regex-p query))
+    (setq phi-search--failed 'err)
+    (message "invalid regexp"))
+   (t
+    (save-excursion
+      (let ((before nil) (after nil) (cnt 0))
+        (goto-char (point-min))
+        (while (and (phi-search--search-forward query nil phi-search--filter-function)
+                    (let ((ov (make-overlay (match-beginning 0) (match-end 0))))
+                      (overlay-put ov 'face 'phi-search-match-face)
+                      (push ov (if (< (match-beginning 0) phi-search--original-position)
+                                   before
+                                 after))
+                      (setq cnt (1+ cnt))
+                      (or unlimited (< cnt phi-search-limit)))))
+        (setq phi-search--overlays (nconc (nreverse after) (nreverse before)))))
+    (let ((num (length phi-search--overlays)))
+      (cond ((zerop num)
+             (setq phi-search--failed t))
+            (t
+             (setq phi-search--failed nil)
+             (when (and (not unlimited)
+                        (>= num phi-search-limit))
+               (message "too short")
+               (phi-search--delete-overlays))))))))
 
 (defun phi-search--select (n)
   "select Nth matching item and go there. return point, or nil for failuare."
@@ -290,8 +300,7 @@ this value must be nil, if nothing is matched.")
        (with-selected-window (car target)
          ;; if buffer is switched, switch back to the target
          (unless (eq (current-buffer) (cdr target))
-           (switch-to-buffer (cdr target))
-           (message "phi-search: buffer switched"))
+           (switch-to-buffer (cdr target)))
          ;; eval body
          ,@body))))
 
@@ -317,24 +326,24 @@ this value must be nil, if nothing is matched.")
       (ding)
       (message "no more matches")))))
 
-(defun phi-search--update (&rest _)
+(defun phi-search--update (beg _ len)
   "update overlays for the target buffer"
-  (phi-search--with-target-buffer
-   (phi-search--with-sublimity
-    (phi-search--delete-overlays)
-    (phi-search--make-overlays-for query)
-    (phi-search--select 0)
-    (when phi-search--after-update-function
-      (funcall phi-search--after-update-function))))
-  (cond
-   ((phi-search--with-target-buffer phi-search--failed)
-    (unless phi-search--fail-pos
-      (setq phi-search--fail-pos (max (minibuffer-prompt-end) (1- (point-max)))))
-    (put-text-property
-     phi-search--fail-pos (point-max) 'face 'phi-search-failpart-face))
-   (t
-    (setq phi-search--fail-pos nil)
-    (put-text-property (minibuffer-prompt-end) (point-max) 'face nil))))
+  (let ((status (phi-search--with-target-buffer
+                 (phi-search--with-sublimity
+                  (phi-search--delete-overlays)
+                  (phi-search--make-overlays-for query)
+                  (phi-search--select 0))
+                 (when phi-search--after-update-function
+                   (funcall phi-search--after-update-function))
+                 phi-search--failed)))
+    (cond
+     ((null status)                     ; success
+      (setq phi-search--fail-pos nil)
+      (put-text-property (minibuffer-prompt-end) (point-max) 'face nil))
+     (t                                 ; failure
+      (setq phi-search--fail-pos (if (eq status 'err) (minibuffer-prompt-end) beg))
+      (put-text-property
+       phi-search--fail-pos (point-max) 'face 'phi-search-failpart-face)))))
 
 ;; + select commands
 
