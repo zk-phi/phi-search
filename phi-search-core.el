@@ -246,10 +246,6 @@ this value must be nil, if nothing is matched.")
   "function called before phi-search ends")
 (make-variable-buffer-local 'phi-search--before-complete-function)
 
-(defvar phi-search--cleanup-function nil
-  "function called after phi-search ends")
-(make-variable-buffer-local 'phi-search--cleanup-function)
-
 (defvar phi-search--convert-query-function nil
   "function which converts search query.")
 (make-variable-buffer-local 'phi-search--convert-query-function)
@@ -414,14 +410,14 @@ Otherwise yank a word from target buffer and expand query."
 
 ;; + start/end phi-search
 
-(defun phi-search--initialize (modeline-fmt keybinds filter-fn update-fn complete-fn
-                                            &optional conv-fn init-fn cleanup-fn)
+(defun phi-search--initialize (modeline-fmt keybinds filter-fn
+                                            update-fn complete-fn
+                                            &optional conv-fn init-fn)
   (setq phi-search--saved-modeline-format  mode-line-format)
   (setq mode-line-format                   modeline-fmt
         phi-search--original-position      (point)
         phi-search--filter-function        filter-fn
         phi-search--after-update-function  update-fn
-        phi-search--cleanup-function       cleanup-fn
         phi-search--selection              nil
         phi-search--overlays               nil)
   (let ((wnd (selected-window))
@@ -439,8 +435,7 @@ Otherwise yank a word from target buffer and expand query."
        (let ((kmap (copy-keymap phi-search-default-map)))
          (dolist (bind (reverse keybinds))
            (eval `(define-key kmap ,(car bind) ,(cdr bind))))
-         kmap)))
-    (funcall phi-search--cleanup-function)))
+         kmap)))))
 
 (defun phi-search-complete (&rest args)
   "finish phi-search. (for developers: ARGS are passed to complete-function)"
