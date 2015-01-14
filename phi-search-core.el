@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.0.0
+;; Version: 2.1.0
 
 ;;; Commentary:
 
@@ -35,10 +35,11 @@
 ;; 1.3.0 add highlight to mismatch part of search string
 ;; 1.3.1 add support for subword/jaword-mode
 ;; 2.0.0 use minibuffer to read query
+;; 2.1.0 use "phi-search--message" to display messages
 
 ;;; Code:
 
-(defconst phi-search-core-version "2.0.0")
+(defconst phi-search-core-version "2.1.0")
 
 ;; + customs
 
