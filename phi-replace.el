@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.2.0
+;; Version: 2.3.0
 
 ;;; Commentary:
 
@@ -49,6 +49,7 @@
 ;; 2.0.2 compatible with phi-search-core v1.2.0
 ;; 2.1.0 provide '!' for phi-replace-query
 ;; 2.2.0 compatibility with phi-search-core v2.0.0
+;; 2.3.0 add interactive preview feature
 
 ;;; Code:
 
@@ -56,7 +57,7 @@
 
 ;; + constant
 
-(defconst phi-replace-version "2.2.0")
+(defconst phi-replace-version "2.3.0")
 
 ;; + suppress byte-compiler
 
@@ -78,6 +79,17 @@
   "additional bindings used in phi-replace"
   :group 'phi-search)
 
+(defcustom phi-replace-enable-preview nil
+  "wnen non-nil, show interactive preview of replace."
+  :group 'phi-search)
+
+;; + faces
+
+(defface phi-replace-preview-face
+  '((t (:inherit 'highlight)))
+  "Face used to show interactive preview."
+  :group 'phi-search)
+
 ;; + variables
 
 (defvar phi-replace--original-restriction nil)
@@ -91,31 +103,53 @@
 (defvar phi-replace--mode-line-format
   '(" *phi-replace*" (:eval (format " [ %d ]" (length phi-search--overlays)))))
 
+(defun phi-replace--update-visual-preview (query replac)
+  (save-excursion
+    (dolist (ov phi-search--overlays)
+      (goto-char (overlay-start ov))
+      (looking-at query)
+      (overlay-put
+       ov 'after-string
+       (ignore-errors
+         (propertize
+          (concat "=>" (match-substitute-replacement replac))
+          'face 'phi-replace-preview-face))))))
+
 (defun phi-replace--complete-function ()
   (phi-search--with-target-buffer
    (when phi-search--overlays
      (let* ((orig-cursor (make-overlay phi-search--original-position
                                        phi-search--original-position))
             (enable-recursive-minibuffers t)
-            (str (read-from-minibuffer "replace with ? ")))
+            (str (minibuffer-with-setup-hook
+                     (lambda ()
+                       (add-hook 'after-change-functions
+                                 (lambda (&rest _)
+                                   (let ((str (minibuffer-contents)))
+                                     (with-current-buffer (cdr target)
+                                       (phi-replace--update-visual-preview query str))))
+                                 nil t)
+                       (with-current-buffer (cdr target)
+                         (phi-replace--update-visual-preview query "")))
+                   (read-from-minibuffer "replace with ? "))))
        (dotimes (n (length phi-search--overlays))
          (if phi-replace--query-mode
-             (phi-search--with-sublimity
-              (phi-search--select n))
+             (phi-search--with-sublimity (phi-search--select n))
            (phi-search--select n)
            (when phi-replace-weight
              (sit-for phi-replace-weight)))
          (let ((ov (nth n phi-search--overlays)))
+           (goto-char (overlay-start ov))
+           (looking-at query)
            (if (and phi-replace--query-mode
                     (let ((ch (read-char-choice
-                               (format "replace with %s (y, n or !) ? " str)
+                               (format "replace with %s (y, n or !) ? "
+                                       (match-substitute-replacement str))
                                '(?y ?n ?!))))
                       (if (= ch ?!)
                           (setq phi-replace--query-mode nil)
                         (= ch ?n))))
                (delete-overlay ov)
-             (goto-char (overlay-start ov))
-             (looking-at query)
              (replace-match str))))
        (goto-char (overlay-start orig-cursor))))
    (when phi-replace--original-restriction

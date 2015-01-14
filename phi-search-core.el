@@ -410,9 +410,8 @@ Otherwise yank a word from target buffer and expand query."
 
 ;; + start/end phi-search
 
-(defun phi-search--initialize (modeline-fmt keybinds filter-fn
-                                            update-fn complete-fn
-                                            &optional conv-fn init-fn)
+(defun phi-search--initialize (modeline-fmt keybinds filter-fn update-fn
+                                            complete-fn &optional conv-fn init-fn)
   (setq phi-search--saved-modeline-format  mode-line-format)
   (setq mode-line-format                   modeline-fmt
         phi-search--original-position      (point)
