@@ -1,4 +1,4 @@
-;;; phi-search.el --- another incremental search command, compatible with "multiple-cursors"
+;;; phi-search.el --- another incremental search & replace, compatible with "multiple-cursors"
 
 ;; Copyright (C) 2013-2015 zk_phi
 

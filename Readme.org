@@ -2,7 +2,7 @@
 
 multiple-cursors.el対応のインクリメンタルサーチ
 
-another incremental search command, compatible with "multiple-cursors"
+another incremental search & replace, compatible with "multiple-cursors"
 
 ** Screencast
 
@@ -20,16 +20,14 @@ may bind a key to the command.
 : (global-set-key (kbd "C-s") 'phi-search)
 : (global-set-key (kbd "C-r") 'phi-search-backward)
 
-When the command is called, a small window appears at the bottom of
-the current window. Input query there in (emacs) regular expression to
-start searching. In the window, following commands are available.
+While searching, following commands are available.
 
-- phi-search-again-or-next (replaces "phi-search")
+- phi-search-again-or-next [C-s]
 
   Move to the next matching item. If query is blank, use the last
   query.
 
-- phi-search-again-or-previous (replaces "phi-search-backward")
+- phi-search-again-or-previous [C-r]
 
   Similar to phi-search-again-or-next, but move to the previous item.
 
@@ -104,23 +102,6 @@ active. Here are some examples.
 : _________________   ________________   ________________
 :                     query: foo         query: foo
 
-*** How This Works with multiple-cursors ?
-
-"multiple-cursors" will repeat commands with fake cursors, in
-"post-command-hook". The command "phi-search" will open a new buffer
-named *phi-search* to read a query. So "post-command-hook" for the
-command runs in *phi-search* buffer. Currently, "multiple-cursors"
-works buffer locally. Therefore, even when multiple-cursrors-mode is
-enabled, *phi-search* buffer is not affected.
-
-When "phi-search-complete" is called, phi-search will generate a
-command that is repeatable for fake cursors, and set the command to
-"this-original-command" and "mc--this-command". Then go back to the
-buffer where phi-search is called from. "post-command-hook" for the
-command runs here, and the generated command will be repeated with
-fake cursors instead. Because seen from multiple-cursors, this command
-is "the" command.
-
 ** phi-replace.el
 
 "phi-replace" and "phi-replace-query" in "phi-replace.el" are
@@ -148,21 +129,19 @@ You may change keybindings by changing "phi-search-default-map".
 : (define-key phi-search-default-map (kbd "<") 'phi-search-again-or-previous)
 : (define-key phi-search-default-map (kbd ">") 'phi-search-again-or-next)
 
-This will affect commands in both "phi-search.el" and
-"phi-replace.el". If you want to add commands only for a specific
-command, you may use variables below.
+This will affect all commands based on phi-search. If you want to add
+commands only for a specific command, you may use variables below.
 
 - phi-search-default-map :: the phi-search common keymap
 
-- phi-search-additional-keybinds :: list of keybinds in form ((KEY
-     . COMMAND) ...) available only with "phi-search(-backward)"
-     command
+- phi-search-additional-keybinds :: list of (KEY . COMMAND) used in
+     "phi-search(-backward)" command
 
-- phi-replace-additinoal-keybinds :: list of keybinds available only
-     with "phi-replace(-query)" command
+- phi-replace-additinoal-keybinds :: list of (KEY . COMMAND) used in
+     "phi-replace(-query)" command
 
-: (add-to-list 'phi-search-additional-keybinds
-:              '((kbd "<app>") . 'phi-search-complete-at-beginning))
+: (push '((kbd "<app>") . 'phi-search-complete-at-beginning)
+:       phi-search-additional-keybinds)
 
 *** Searching
 
@@ -179,9 +158,9 @@ query.
 *** Hooks
 
 Hooks "phi-search-init-hook" and "phi-replace-init-hook" are hooks run
-when phi-search buffer is initialized.
+after initializing the minibuffer.
 
-*** Face
+*** Faces
 
 Matching items are propertized with "phi-search-match-face", and the
 selected item is propertized with "phi-search-selection-face". If they
@@ -204,4 +183,4 @@ look not pretty in your colorscheme, you may modify them.
 This command uses "multiple-cursors" variables and behavior that are
 not documented. Therefore, after you update "multiple-cursors", it is
 good idea to test if this command works still correctly, before you
-use this command actually.
+actually use this command.

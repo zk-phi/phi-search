@@ -1,4 +1,4 @@
-;;; phi-search-core.el --- another incremental search interface
+;;; phi-search-core.el --- another incremental search & replace, compatible with "multiple-cursors"
 
 ;; Copyright (C) 2013-2015 zk_phi
 

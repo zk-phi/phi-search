@@ -1,4 +1,4 @@
-;;; phi-replace.el --- another replace command building on phi-search
+;;; phi-replace.el --- another incremental search & replace, compatible with "multiple-cursors"
 
 ;; Copyright (C) 2013-2015 zk_phi
 
