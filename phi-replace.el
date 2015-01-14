@@ -65,7 +65,7 @@
 
 ;; + customs
 
-(defcustom phi-replace-weight 0
+(defcustom phi-replace-weight nil
   "weight for \"phi-replace\""
   :group 'phi-search)
 
@@ -99,10 +99,12 @@
             (enable-recursive-minibuffers t)
             (str (read-from-minibuffer "replace with ? ")))
        (dotimes (n (length phi-search--overlays))
-         (phi-search--with-sublimity
-          (phi-search--select n))
-         (unless phi-replace--query-mode
-           (sit-for phi-replace-weight))
+         (if phi-replace--query-mode
+             (phi-search--with-sublimity
+              (phi-search--select n))
+           (phi-search--select n)
+           (when phi-replace-weight
+             (sit-for phi-replace-weight)))
          (let ((ov (nth n phi-search--overlays)))
            (if (and phi-replace--query-mode
                     (let ((ch (read-char-choice
