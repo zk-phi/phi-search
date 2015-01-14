@@ -272,6 +272,9 @@ this value must be nil, if nothing is matched.")
   "starting position of a message. nil if no message is active.")
 (make-variable-buffer-local 'phi-search--message-start)
 
+(defvar phi-search--pending-message nil)
+(make-variable-buffer-local 'phi-search--pending-message)
+
 ;; ++ functions
 
 (defvar phi-search--last-converted-query nil)
@@ -290,18 +293,7 @@ this value must be nil, if nothing is matched.")
 
 (defun phi-search--message (msg)
   (with-selected-window (minibuffer-window)
-    (save-excursion
-      (goto-char (point-max))
-      (unless phi-search--message-start
-        (setq phi-search--message-start (point)))
-      (let ((inhibit-modification-hooks t))
-        (insert " [" msg "]")))))
-
-(defun phi-search--clear-message ()
-  (when phi-search--message-start
-    (let ((inhibit-modification-hooks t))
-      (delete-region phi-search--message-start (point-max)))
-    (setq phi-search--message-start nil)))
+    (setq phi-search--pending-message msg)))
 
 (defmacro phi-search--with-target-buffer (&rest body)
   "eval body with the target buffer selected.
@@ -365,6 +357,20 @@ this value must be nil, if nothing is matched.")
       (put-text-property
        phi-search--fail-pos (or phi-search--message-start (point-max))
        'face 'phi-search-failpart-face)))))
+
+(defun phi-search--clear-message (&rest _)
+  (when phi-search--message-start
+    (let ((inhibit-modification-hooks t))
+      (delete-region phi-search--message-start (point-max)))
+    (setq phi-search--message-start nil)))
+
+(defun phi-search--restore-message ()
+  (when phi-search--pending-message
+    (save-excursion
+      (setq phi-search--message-start (goto-char (point-max)))
+      (let ((inhibit-modification-hooks t))
+        (insert " [" phi-search--pending-message "]")
+        (setq phi-search--pending-message nil)))))
 
 ;; + select commands
 
@@ -457,6 +463,7 @@ Otherwise yank a word from target buffer and expand query."
     (minibuffer-with-setup-hook
         (lambda ()
           (add-hook 'pre-command-hook 'phi-search--clear-message nil t)
+          (add-hook 'post-command-hook 'phi-search--restore-message nil t)
           (add-hook 'after-change-functions 'phi-search--update nil t)
           (setq phi-search--target                   (cons wnd buf)
                 phi-search--convert-query-function   conv-fn
