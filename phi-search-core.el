@@ -207,7 +207,7 @@ this value must be nil, if nothing is matched.")
   (cond
    ((not (phi-search--valid-regex-p query))
     (setq phi-search--failed 'err)
-    (message "invalid regexp"))
+    (phi-search--message "invalid regexp"))
    (t
     (save-excursion
       (let ((before nil) (after nil) (cnt 0))
@@ -228,7 +228,7 @@ this value must be nil, if nothing is matched.")
              (setq phi-search--failed nil)
              (when (and (not unlimited)
                         (>= num phi-search-limit))
-               (message "too short")
+               (phi-search--message "too short")
                (phi-search--delete-overlays))))))))
 
 (defun phi-search--select (n)
@@ -267,6 +267,10 @@ this value must be nil, if nothing is matched.")
   "save position where search fail begin with.")
 (make-variable-buffer-local 'phi-search--fail-pos)
 
+(defvar phi-search--message-start nil
+  "starting position of a message. nil if no message is active.")
+(make-variable-buffer-local 'phi-search--message-start)
+
 ;; ++ functions
 
 (defvar phi-search--last-converted-query nil)
@@ -282,6 +286,19 @@ this value must be nil, if nothing is matched.")
            (setq phi-search--last-converted-query
                  (cons q (cons phi-search--convert-query-function res)))
            res))))
+
+(defun phi-search--message (msg)
+  (with-selected-window (minibuffer-window)
+    (save-excursion
+      (setq phi-search--message-start (goto-char (point-max)))
+      (let ((inhibit-modification-hooks t))
+        (insert " [" msg "]")))))
+
+(defun phi-search--clear-message ()
+  (when phi-search--message-start
+    (let ((inhibit-modification-hooks t))
+      (delete-region phi-search--message-start (point-max)))
+    (setq phi-search--message-start nil)))
 
 (defmacro phi-search--with-target-buffer (&rest body)
   "eval body with the target buffer selected.
@@ -343,7 +360,8 @@ this value must be nil, if nothing is matched.")
      (t                                 ; failure
       (setq phi-search--fail-pos (if (eq status 'err) (minibuffer-prompt-end) beg))
       (put-text-property
-       phi-search--fail-pos (point-max) 'face 'phi-search-failpart-face)))))
+       phi-search--fail-pos (or phi-search--message-start (point-max))
+       'face 'phi-search-failpart-face)))))
 
 ;; + select commands
 
@@ -435,6 +453,7 @@ Otherwise yank a word from target buffer and expand query."
         (buf (current-buffer)))
     (minibuffer-with-setup-hook
         (lambda ()
+          (add-hook 'pre-command-hook 'phi-search--clear-message nil t)
           (add-hook 'after-change-functions 'phi-search--update nil t)
           (setq phi-search--target                   (cons wnd buf)
                 phi-search--convert-query-function   conv-fn
