@@ -290,7 +290,9 @@ this value must be nil, if nothing is matched.")
 (defun phi-search--message (msg)
   (with-selected-window (minibuffer-window)
     (save-excursion
-      (setq phi-search--message-start (goto-char (point-max)))
+      (goto-char (point-max))
+      (unless phi-search--message-start
+        (setq phi-search--message-start (point)))
       (let ((inhibit-modification-hooks t))
         (insert " [" msg "]")))))
 
