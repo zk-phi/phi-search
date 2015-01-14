@@ -79,7 +79,7 @@
   "additional bindings used in phi-replace"
   :group 'phi-search)
 
-(defcustom phi-replace-enable-preview nil
+(defcustom phi-replace-enable-preview t
   "wnen non-nil, show interactive preview of replace."
   :group 'phi-search)
 
