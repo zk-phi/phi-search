@@ -423,7 +423,7 @@ Otherwise yank a word from target buffer and expand query."
 ;; + start/end phi-search
 
 (defun phi-search--initialize (modeline-fmt keybinds filter-fn update-fn
-                                            complete-fn &optional conv-fn init-fn)
+                                            complete-fn &optional conv-fn init-fn prompt)
   (setq phi-search--saved-modeline-format  mode-line-format)
   (setq mode-line-format                   modeline-fmt
         phi-search--original-position      (point)
@@ -442,7 +442,7 @@ Otherwise yank a word from target buffer and expand query."
           (run-hooks 'phi-search-hook)
           (funcall init-fn))
       (read-from-minibuffer
-       "phi-search: " nil
+       (or prompt "phi-search: ") nil
        (let ((kmap (copy-keymap phi-search-default-map)))
          (dolist (bind (reverse keybinds))
            (eval `(define-key kmap ,(car bind) ,(cdr bind))))
