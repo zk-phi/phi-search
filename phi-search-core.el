@@ -299,17 +299,8 @@ success, or nil on failuare."
 
 (defvar phi-search--last-converted-query nil)
 (defun phi-search--generate-query (q)
-  (cond ((null phi-search--convert-query-function)
-         q)
-        ((and (string= q (car phi-search--last-converted-query))
-              (eq phi-search--convert-query-function
-                  (cddr phi-search--last-converted-query)))
-         (cdr phi-search--last-converted-query))
-        (t
-         (let ((res (funcall phi-search--convert-query-function q)))
-           (setq phi-search--last-converted-query
-                 (cons q (cons phi-search--convert-query-function res)))
-           res))))
+  (if (null phi-search--convert-query-function) q
+    (funcall phi-search--convert-query-function q)))
 
 (defun phi-search--message (msg)
   (with-selected-window (minibuffer-window)
@@ -490,9 +481,11 @@ Otherwise yank a word from target buffer and expand query."
         (buf (current-buffer)))
     (minibuffer-with-setup-hook
         (lambda ()
+          ;; *FIXME* does wrong when a timer modifies the minibuffer
+          ;; ('cause message is not cleared yet)
           (add-hook 'pre-command-hook 'phi-search--clear-message nil t)
-          (add-hook 'post-command-hook 'phi-search--restore-message nil t)
           (add-hook 'after-change-functions 'phi-search--update nil t)
+          (add-hook 'post-command-hook 'phi-search--restore-message nil t)
           (setq phi-search--target                   (cons wnd buf)
                 phi-search--convert-query-function   conv-fn
                 phi-search--before-complete-function complete-fn)
