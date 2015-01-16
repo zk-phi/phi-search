@@ -40,7 +40,7 @@
 
 ;;; Code:
 
-(defconst phi-search-core-version "2.1.0")
+(defconst phi-search-core-version "2.1.1")
 
 ;; + customs
 
