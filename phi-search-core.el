@@ -55,6 +55,10 @@
   "when non-nil, phi-search become case sensitive"
   :group 'phi-search)
 
+(defcustom phi-search-highlight-mismatch-part t
+  "when non-nil, mismatch part of the input is highlighted."
+  :group 'phi-search)
+
 (defcustom phi-search-default-map
   (let ((kmap (make-sparse-keymap)))
     (define-key kmap (kbd "C-s") 'phi-search-again-or-next)
@@ -208,7 +212,7 @@ this value must be nil, if nothing is matched.")
   (cond
    ((not (phi-search--valid-regex-p query))
     (setq phi-search--failed 'err)
-    (phi-search--message "invalid regexp"))
+    (phi-search--message "invalid input"))
    (t
     (save-excursion
       (let ((before nil) (after nil) (cnt 0))
@@ -348,15 +352,16 @@ this value must be nil, if nothing is matched.")
                  (when phi-search--after-update-function
                    (funcall phi-search--after-update-function))
                  phi-search--failed)))
-    (cond
-     ((null status)                     ; success
-      (setq phi-search--fail-pos nil)
-      (put-text-property (minibuffer-prompt-end) (point-max) 'face nil))
-     (t                                 ; failure
-      (setq phi-search--fail-pos (if (eq status 'err) (minibuffer-prompt-end) beg))
-      (put-text-property
-       phi-search--fail-pos (or phi-search--message-start (point-max))
-       'face 'phi-search-failpart-face)))))
+    (when phi-search-highlight-mismatch-part
+      (cond
+       ((null status)                    ; success
+        (setq phi-search--fail-pos nil)
+        (put-text-property (minibuffer-prompt-end) (point-max) 'face nil))
+       (t                                ; failure
+        (setq phi-search--fail-pos (if (eq status 'err) (minibuffer-prompt-end) beg))
+        (put-text-property
+         phi-search--fail-pos (or phi-search--message-start (point-max))
+         'face 'phi-search-failpart-face))))))
 
 (defun phi-search--clear-message (&rest _)
   (when phi-search--message-start
