@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.1.0
+;; Version: 2.1.1
 
 ;;; Commentary:
 
@@ -36,6 +36,7 @@
 ;; 1.3.1 add support for subword/jaword-mode
 ;; 2.0.0 use minibuffer to read query
 ;; 2.1.0 use "phi-search--message" to display messages
+;; 2.1.1 add option phi-search-highlight-mismatch-part
 
 ;;; Code:
 
