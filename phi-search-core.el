@@ -358,7 +358,7 @@ success, or nil on failuare."
       (ding)
       (message "no more matches")))))
 
-(defun phi-search--update (&optional beg _ len)
+(defun phi-search--update (&optional beg &rest _)
   "update overlays for the target buffer"
   (let ((status (phi-search--with-target-buffer
                  (phi-search--with-sublimity
@@ -374,7 +374,9 @@ success, or nil on failuare."
         (setq phi-search--fail-pos nil)
         (put-text-property (minibuffer-prompt-end) (point-max) 'face nil))
        (t                                ; failure
-        (setq phi-search--fail-pos (if (eq status 'err) (minibuffer-prompt-end) beg))
+        (setq phi-search--fail-pos (if (eq status 'err)
+                                       (minibuffer-prompt-end)
+                                     (or beg (point))))
         (put-text-property
          phi-search--fail-pos (or phi-search--message-start (point-max))
          'face 'phi-search-failpart-face))))))
