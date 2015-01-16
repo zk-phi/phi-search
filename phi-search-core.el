@@ -162,19 +162,19 @@ accepted only when INCLUSIVE is non-nil."
 ;; ++ variables
 
 (defvar phi-search--last-executed nil
-  "stores the last query")
+  "the last query used")
 (make-variable-buffer-local 'phi-search--last-executed)
 
 (defvar phi-search--filter-function nil
-  "when non-nil, candidates must pass this filter")
+  "when non-nil, candidates are filtered with this function.")
 (make-variable-buffer-local 'phi-search--filter-function)
 
 (defvar phi-search--original-position nil
-  "stores position where this search started from.")
+  "position where this search is started from.")
 (make-variable-buffer-local 'phi-search--original-position)
 
 (defvar phi-search--overlays nil
-  "overlays currently active in this target buffer. is ordered.")
+  "an ordered list of active overlays in this target buffer.")
 (make-variable-buffer-local 'phi-search--overlays)
 
 (defvar phi-search--failed nil
@@ -185,8 +185,8 @@ accepted only when INCLUSIVE is non-nil."
 (make-variable-buffer-local 'phi-search--failed)
 
 (defvar phi-search--selection nil
-  "stores which item is currently selected.
-this value must be nil, if nothing is matched.")
+  "index of currently selected item. if nothing's selected, this
+  variable must be set nil.")
 (make-variable-buffer-local 'phi-search--selection)
 
 (defvar phi-search--after-update-function nil
@@ -200,7 +200,9 @@ this value must be nil, if nothing is matched.")
 ;; ++ functions
 
 (defun phi-search--delete-overlays (&optional keep-point)
-  "delete all overlays in THIS target buffer, and go to the original position"
+  "delete all overlays in THIS target buffer, and go back to the
+original position. when optional arg KEEP-POINT is non-nil,
+delete overlays without movind the cursor."
   (mapc 'delete-overlay phi-search--overlays)
   (setq phi-search--overlays nil
         phi-search--selection nil)
@@ -209,7 +211,10 @@ this value must be nil, if nothing is matched.")
     (goto-char phi-search--original-position)))
 
 (defun phi-search--make-overlays-for (query &optional unlimited)
-  "make overlays for all matching items in THIS target buffer."
+  "perform search with QUERY, and make overlays for all matching
+items in THIS target buffer. when optional arg UNLIMITED is
+omitted or nil, number of matches is limited to
+`phi-search-limit'."
   (cond
    ((not (phi-search--valid-regex-p query))
     (setq phi-search--failed 'err)
@@ -238,7 +243,8 @@ this value must be nil, if nothing is matched.")
                (phi-search--delete-overlays))))))))
 
 (defun phi-search--select (n)
-  "select Nth matching item and go there. return point, or nil for failuare."
+  "select Nth item and move cursor there. return point on
+success, or nil on failuare."
   (when (and (>= n 0)
              (< n (length phi-search--overlays)))
     ;; unselect old item
@@ -257,16 +263,22 @@ this value must be nil, if nothing is matched.")
 ;; + private functions/variables for PROMPT buffer
 ;; ++ variables
 
+;; *TODO* these variable may not have to be buffer-local. porting
+;; local variables with `phi-search--with-target-buffer' was a poor
+;; design. we probably should implement something like
+;; `phi-search-get-query' function to fetch converted query.
+
 (defvar phi-search--target nil
   "the target (window . buffer) which this prompt buffer is for")
 (make-variable-buffer-local 'phi-search--target)
 
 (defvar phi-search--before-complete-function nil
-  "function called before phi-search ends")
+  "function called IN THIS PROMPT BUFFER just before phi-search
+  completes")
 (make-variable-buffer-local 'phi-search--before-complete-function)
 
 (defvar phi-search--convert-query-function nil
-  "function which converts search query.")
+  "function that converts search query.")
 (make-variable-buffer-local 'phi-search--convert-query-function)
 
 (defvar phi-search--fail-pos nil
@@ -277,10 +289,13 @@ this value must be nil, if nothing is matched.")
   "starting position of a message. nil if no message is active.")
 (make-variable-buffer-local 'phi-search--message-start)
 
-(defvar phi-search--pending-message nil)
+(defvar phi-search--pending-message nil
+  "a pending message string, or nil.")
 (make-variable-buffer-local 'phi-search--pending-message)
 
 ;; ++ functions
+
+;; *NOTE* should caching be implemented in each `convert-fn' ?
 
 (defvar phi-search--last-converted-query nil)
 (defun phi-search--generate-query (q)
@@ -365,12 +380,14 @@ this value must be nil, if nothing is matched.")
          'face 'phi-search-failpart-face))))))
 
 (defun phi-search--clear-message (&rest _)
+  "delete message part from minibuffer."
   (when phi-search--message-start
     (let ((inhibit-modification-hooks t))
       (delete-region phi-search--message-start (point-max)))
     (setq phi-search--message-start nil)))
 
 (defun phi-search--restore-message ()
+  "insert pending message to minibuffer"
   (when phi-search--pending-message
     (save-excursion
       (setq phi-search--message-start (goto-char (point-max)))
@@ -410,12 +427,14 @@ this value must be nil, if nothing is matched.")
       (recenter)))))
 
 (defun phi-search-scroll-down ()
+  "scroll down the target buffer"
   (interactive)
   (phi-search--with-target-buffer
    (phi-search--with-sublimity
     (call-interactively 'scroll-down))))
 
 (defun phi-search-scroll-up ()
+  "scroll up the target buffer"
   (interactive)
   (phi-search--with-target-buffer
    (phi-search--with-sublimity
