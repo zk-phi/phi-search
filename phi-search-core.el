@@ -295,8 +295,6 @@ success, or nil on failuare."
 
 ;; ++ functions
 
-;; *NOTE* should caching be implemented in each `convert-fn' ?
-
 (defvar phi-search--last-converted-query nil)
 (defun phi-search--generate-query (q)
   (if (null phi-search--convert-query-function) q
