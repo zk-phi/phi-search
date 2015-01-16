@@ -151,12 +151,12 @@ accepted only when INCLUSIVE is non-nil."
 (declare-function sublimity--post-command "sublimity")
 (defmacro phi-search--with-sublimity (&rest body)
   "if sublimity is installed, use it"
-  `(if (and (boundp 'sublimity-mode) sublimity-mode)
-       (progn
-         (sublimity--pre-command)
-         ,@body
-         (sublimity--post-command))
-     ,@body))
+  `(cond ((and (boundp 'sublimity-mode) sublimity-mode)
+          (sublimity--pre-command)
+          (prog1 (progn ,@body)
+            (sublimity--post-command)))
+         (t
+          ,@body)))
 
 ;; + private functions/variables for TARGET buffer
 ;; ++ variables
