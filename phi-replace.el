@@ -123,12 +123,13 @@
             (enable-recursive-minibuffers t)
             (str (minibuffer-with-setup-hook
                      (lambda ()
-                       (add-hook 'after-change-functions
-                                 (lambda (&rest _)
-                                   (let ((str (minibuffer-contents)))
-                                     (with-current-buffer (cdr target)
-                                       (phi-replace--update-visual-preview query str))))
-                                 nil t)
+                       (when phi-replace-enable-preview
+                         (add-hook 'after-change-functions
+                                   (lambda (&rest _)
+                                     (let ((str (minibuffer-contents)))
+                                       (with-current-buffer (cdr target)
+                                         (phi-replace--update-visual-preview query str))))
+                                   nil t))
                        (with-current-buffer (cdr target)
                          (phi-replace--update-visual-preview query "")))
                    (read-from-minibuffer "replace with ? "))))
