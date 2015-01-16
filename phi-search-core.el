@@ -358,7 +358,7 @@ success, or nil on failuare."
       (ding)
       (message "no more matches")))))
 
-(defun phi-search--update (beg _ len)
+(defun phi-search--update (&optional beg _ len)
   "update overlays for the target buffer"
   (let ((status (phi-search--with-target-buffer
                  (phi-search--with-sublimity
