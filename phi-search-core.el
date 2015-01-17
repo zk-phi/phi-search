@@ -107,8 +107,11 @@
 ;; + utilities
 
 (defun phi-search--search-forward (query limit &optional filter inclusive)
-  "a handy version of search-forward-regexp. zero-width match is
-accepted only when INCLUSIVE is non-nil."
+  "a handy version of search-forward-regexp, that phi-search uses
+to search for candidates. like (search-forward-regexp <> nil t)
+but case-sensitivity is handled automatically and result is
+filtered with FILTER. zero-width match is accepted only when
+INCLUSIVE is non-nil."
   (let* ((case-fold-search (or (not phi-search-case-sensitive)
                                (and (eq phi-search-case-sensitive 'guess)
                                     (string= query (downcase query)))))
@@ -122,7 +125,8 @@ accepted only when INCLUSIVE is non-nil."
       pos2)))
 
 (defun phi-search--open-invisible-temporary (hidep)
-  "when nil, show invisible text at point. otherwise hide it."
+  "show invisible text at point temporary. when optional arg
+HIDEP is non-nil, hide the opened text instead."
   (mapc (lambda (ov)
           (let ((ioit (overlay-get ov 'isearch-open-invisible-temporary)))
             (cond (ioit
@@ -135,7 +139,7 @@ accepted only when INCLUSIVE is non-nil."
         (overlays-at (point))))
 
 (defun phi-search--open-invisible-permanently ()
-  "make point visible permanently"
+  "show invisible text at point permanently"
   (mapc (lambda (ov)
           (let ((ioi (overlay-get ov 'isearch-open-invisible)))
             (when ioi (funcall ioi ov))))
