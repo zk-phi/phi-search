@@ -106,10 +106,9 @@
 
 ;; + utilities
 
-(defun phi-search-search-forward (query limit &optional filter inclusive)
-  "a variation of search-forward-regexp, that phi-search uses to
-search for candidates. zero-width match is accepted only when
-INCLUSIVE is non-nil."
+(defun phi-search--search-forward (query limit &optional filter inclusive)
+  "a handy version of search-forward-regexp. zero-width match is
+accepted only when INCLUSIVE is non-nil."
   (let* ((case-fold-search (or (not phi-search-case-sensitive)
                                (and (eq phi-search-case-sensitive 'guess)
                                     (string= query (downcase query)))))
@@ -119,12 +118,11 @@ INCLUSIVE is non-nil."
             (and filter (not (save-match-data (funcall filter)))))
         (progn
           (forward-char 1)
-          (phi-search-search-forward query limit filter t))
+          (phi-search--search-forward query limit filter t))
       pos2)))
 
-(defun phi-search-open-invisible-temporary (&optional hidep)
-  "show invisible test at point temporary. when optional arg
-HIDEP is non-nil, hide the opened text instead."
+(defun phi-search--open-invisible-temporary (hidep)
+  "when nil, show invisible text at point. otherwise hide it."
   (mapc (lambda (ov)
           (let ((ioit (overlay-get ov 'isearch-open-invisible-temporary)))
             (cond (ioit
@@ -136,8 +134,8 @@ HIDEP is non-nil, hide the opened text instead."
                      (overlay-put ov 'invisible nil))))))
         (overlays-at (point))))
 
-(defun phi-search-open-invisible-permanently ()
-  "show invisible text at point permanently."
+(defun phi-search--open-invisible-permanently ()
+  "make point visible permanently"
   (mapc (lambda (ov)
           (let ((ioi (overlay-get ov 'isearch-open-invisible)))
             (when ioi (funcall ioi ov))))
@@ -209,7 +207,7 @@ delete overlays without movind the cursor."
   (setq phi-search--overlays nil
         phi-search--selection nil)
   (unless keep-point
-    (phi-search-open-invisible-temporary t)
+    (phi-search--open-invisible-temporary t)
     (goto-char phi-search--original-position)))
 
 (defun phi-search--make-overlays-for (query &optional unlimited)
@@ -225,7 +223,7 @@ omitted or nil, number of matches is limited to
     (save-excursion
       (let ((before nil) (after nil) (cnt 0))
         (goto-char (point-min))
-        (while (and (phi-search-search-forward query nil phi-search--filter-function)
+        (while (and (phi-search--search-forward query nil phi-search--filter-function)
                     (let ((ov (make-overlay (match-beginning 0) (match-end 0))))
                       (overlay-put ov 'face 'phi-search-match-face)
                       (push ov (if (< (match-beginning 0) phi-search--original-position)
@@ -251,7 +249,7 @@ success, or nil on failuare."
              (< n (length phi-search--overlays)))
     ;; unselect old item
     (when phi-search--selection
-      (phi-search-open-invisible-temporary t)
+      (phi-search--open-invisible-temporary t)
       (overlay-put (nth phi-search--selection phi-search--overlays)
                    'face 'phi-search-match-face))
     ;; select new item if there
@@ -259,7 +257,7 @@ success, or nil on failuare."
       (setq phi-search--selection n)
       (overlay-put ov 'face 'phi-search-selection-face)
       (goto-char (overlay-end ov))
-      (phi-search-open-invisible-temporary nil)
+      (phi-search--open-invisible-temporary nil)
       (point))))
 
 ;; + private functions/variables for PROMPT buffer
@@ -507,7 +505,7 @@ Otherwise yank a word from target buffer and expand query."
         (str (minibuffer-contents)))
     (phi-search--with-target-buffer
      (phi-search--delete-overlays t)
-     (phi-search-open-invisible-permanently)
+     (phi-search--open-invisible-permanently)
      (setq mode-line-format                   phi-search--saved-modeline-format
            phi-search--original-position      nil
            phi-search--filter-function        nil
