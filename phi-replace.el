@@ -136,9 +136,7 @@
        (dotimes (n (length phi-search--overlays))
          (if phi-replace--query-mode
              (phi-search--with-sublimity (phi-search--select n))
-           (phi-search--select n)
-           (when phi-replace-weight
-             (sit-for phi-replace-weight)))
+           (phi-search--select n))
          (let ((ov (nth n phi-search--overlays)))
            (goto-char (overlay-start ov))
            (looking-at query)
@@ -151,7 +149,9 @@
                           (setq phi-replace--query-mode nil)
                         (= ch ?n))))
                (delete-overlay ov)
-             (replace-match str))))
+             (replace-match str)))
+         (when (and (not phi-replace--query-mode) phi-replace-weight)
+           (sit-for phi-replace-weight)))
        (goto-char (overlay-start orig-cursor))))
    (when phi-replace--original-restriction
      (let ((beg (car phi-replace--original-restriction))
