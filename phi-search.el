@@ -172,10 +172,10 @@
        (interactive)
        ,pre-process
        (dotimes (n ,(1+ n))
-         (unless (phi-search--search-forward ,query nil ,filter (zerop n))
+         (unless (phi-search-search-forward ,query nil ,filter (zerop n))
            (goto-char (point-min))
-           (phi-search--search-forward ,query nil ,filter t)))
-       (phi-search--open-invisible-permanently)
+           (phi-search-search-forward ,query nil ,filter t)))
+       (phi-search-open-invisible-permanently)
        ,post-process)))
 
 ;; + start/end phi-search
