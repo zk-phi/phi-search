@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.3.0
+;; Version: 2.3.1
 
 ;;; Commentary:
 
@@ -50,6 +50,7 @@
 ;; 2.1.0 provide '!' for phi-replace-query
 ;; 2.2.0 compatibility with phi-search-core v2.0.0
 ;; 2.3.0 add interactive preview feature
+;; 2.3.1 call phi-replace even in popup window
 
 ;;; Code:
 
@@ -57,7 +58,7 @@
 
 ;; + constant
 
-(defconst phi-replace-version "2.3.0")
+(defconst phi-replace-version "2.3.1")
 
 ;; + suppress byte-compiler
 
@@ -184,19 +185,13 @@
 (defun phi-replace ()
   "replace command using phi-search"
   (interactive)
-  (if (and (boundp 'popwin:popup-window)
-           (eq (selected-window) popwin:popup-window))
-      (call-interactively 'replace-regexp)
-    (phi-replace--initialize nil)))
+  (phi-replace--initialize nil))
 
 ;;;###autoload
 (defun phi-replace-query ()
   "replace command using phi-search"
   (interactive)
-  (if (and (boundp 'popwin:popup-window)
-           (eq (selected-window) popwin:popup-window))
-      (call-interactively 'query-replace-regexp)
-    (phi-replace--initialize t)))
+  (phi-replace--initialize t))
 
 (defun phi-replace-again-or-complete ()
   "execute phi-replace. if the query is empty, use the last

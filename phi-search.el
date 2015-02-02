@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.2.0
+;; Version: 2.2.1
 
 ;;; Commentary:
 
@@ -108,6 +108,7 @@
 ;; 2.1.0 handle "isearch-open-invisible" properties
 ;; 2.1.1 compatible with phi-search-core v1.2.0
 ;; 2.2.0 compatibility with phi-search-core v2.0.0
+;; 2.2.1 call phi-search even in a popup window
 
 ;;; Code:
 
@@ -115,7 +116,7 @@
 
 ;; + constants
 
-(defconst phi-search-version "2.2.0")
+(defconst phi-search-version "2.2.1")
 
 ;; + suppress byte-compiler
 
@@ -243,14 +244,11 @@
 (defun phi-search (&optional use-isearch)
   "incremental search command compatible with \"multiple-cursors\""
   (interactive "P")
-  (if (and (not use-isearch)
-           (not (and (boundp 'popwin:popup-window)
-                     (eq (selected-window) popwin:popup-window))))
+  (if (not use-isearch)
       (phi-search--search-initialize nil)
     (call-interactively 'isearch-forward-regexp)
     (when (use-region-p)
-      (let ((string
-             (buffer-substring (region-beginning) (region-end))))
+      (let ((string (buffer-substring (region-beginning) (region-end))))
         (deactivate-mark)
         (isearch-yank-string string)))))
 
@@ -258,14 +256,11 @@
 (defun phi-search-backward (&optional use-isearch)
   "incremental search command compatible with \"multiple-cursors\""
   (interactive "P")
-  (if (and (not use-isearch)
-           (not (and (boundp 'popwin:popup-window)
-                     (eq (selected-window) popwin:popup-window))))
+  (if (not use-isearch)
       (phi-search--search-initialize t)
     (call-interactively 'isearch-backward-regexp)
     (when (use-region-p)
-      (let ((string
-             (buffer-substring (region-beginning) (region-end))))
+      (let ((string (buffer-substring (region-beginning) (region-end))))
         (deactivate-mark)
         (isearch-yank-string string)))))
 
