@@ -335,9 +335,9 @@ position from where input is highlighted when search failed."
                  (phi-search--with-sublimity
                   (phi-search--delete-overlays)
                   (phi-search--make-overlays-for query)
-                  (phi-search--select 0))
-                 (when phi-search--after-update-function
-                   (funcall phi-search--after-update-function))
+                  (phi-search--select 0)
+                  (when phi-search--after-update-function
+                    (funcall phi-search--after-update-function)))
                  phi-search--failed)))
     (when phi-search-highlight-mismatch-part
       (cond
