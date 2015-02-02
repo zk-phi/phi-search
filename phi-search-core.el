@@ -104,6 +104,56 @@
   "Face used to highlight mismatch part in phi-search buffer."
   :group 'phi-search)
 
+;; + internal vars
+
+(defvar phi-search--last-executed nil
+  "the last query used")
+(make-variable-buffer-local 'phi-search--last-executed)
+
+(defvar phi-search--filter-function nil
+  "when non-nil, candidates are filtered with this function.")
+
+(defvar phi-search--original-position nil
+  "position where this search is started from.")
+
+(defvar phi-search--overlays nil
+  "an ordered list of active overlays in this target buffer.")
+
+(defvar phi-search--failed nil
+  "non-nil if the last search was failed. 'err especially when
+  the failure is caused by an error. `phi-search--overlays' can
+  be nil on both failure and too-many-matches error, but this
+  variable become non-nil only on failure.")
+
+(defvar phi-search--selection nil
+  "index of currently selected item. if nothing's selected, this
+  variable must be set nil.")
+
+(defvar phi-search--after-update-function nil
+  "function called IN THE TARGET BUFFER as soon as overlays are updated")
+
+(defvar phi-search--saved-mode-line-format nil
+  "saved modeline-format of the target buffer.")
+
+(defvar phi-search--target nil
+  "the target (window . buffer) which this prompt buffer is for")
+
+(defvar phi-search--before-complete-function nil
+  "function called IN THIS PROMPT BUFFER just before phi-search
+  completes")
+
+(defvar phi-search--convert-query-function nil
+  "function that converts search query.")
+
+(defvar phi-search--fail-pos nil
+  "save position where search fail begin with.")
+
+(defvar phi-search--message-start nil
+  "starting position of a message. nil if no message is active.")
+
+(defvar phi-search--pending-message nil
+  "a pending message string, or nil.")
+
 ;; + utilities
 
 (defun phi-search--search-forward (query limit &optional filter inclusive)
@@ -162,53 +212,14 @@ HIDEP is non-nil, hide the opened text instead."
          (t
           ,@body)))
 
-;; + private functions/variables for TARGET buffer
-;; ++ variables
-
-(defvar phi-search--last-executed nil
-  "the last query used")
-(make-variable-buffer-local 'phi-search--last-executed)
-
-(defvar phi-search--filter-function nil
-  "when non-nil, candidates are filtered with this function.")
-(make-variable-buffer-local 'phi-search--filter-function)
-
-(defvar phi-search--original-position nil
-  "position where this search is started from.")
-(make-variable-buffer-local 'phi-search--original-position)
-
-(defvar phi-search--overlays nil
-  "an ordered list of active overlays in this target buffer.")
-(make-variable-buffer-local 'phi-search--overlays)
-
-(defvar phi-search--failed nil
-  "non-nil if the last search was failed. 'err especially when
-  the failure is caused by an error. `phi-search--overlays' can
-  be nil on both failure and too-many-matches error, but this
-  variable become non-nil only on failure.")
-(make-variable-buffer-local 'phi-search--failed)
-
-(defvar phi-search--selection nil
-  "index of currently selected item. if nothing's selected, this
-  variable must be set nil.")
-(make-variable-buffer-local 'phi-search--selection)
-
-(defvar phi-search--after-update-function nil
-  "function called IN THE TARGET BUFFER as soon as overlays are updated")
-(make-variable-buffer-local 'phi-search--after-update-function)
-
-(defvar phi-search--saved-modeline-format nil
-  "saved modeline-format of the target buffer.")
-(make-variable-buffer-local 'phi-search--saved-modeline-format)
-
-;; ++ functions
+;; + private functions for TARGET buffer
 
 (defun phi-search--delete-overlays (&optional keep-point)
   "delete all overlays in THIS target buffer, and go back to the
 original position. when optional arg KEEP-POINT is non-nil,
 delete overlays without movind the cursor."
   (mapc 'delete-overlay phi-search--overlays)
-  (setq phi-search--overlays nil
+  (setq phi-search--overlays  nil
         phi-search--selection nil)
   (unless keep-point
     (phi-search--open-invisible-temporary t)
@@ -264,42 +275,8 @@ success, or nil on failuare."
       (phi-search--open-invisible-temporary nil)
       (point))))
 
-;; + private functions/variables for PROMPT buffer
-;; ++ variables
+;; + private functions for PROMPT buffer
 
-;; *TODO* these variable may not have to be buffer-local. porting
-;; local variables with `phi-search--with-target-buffer' was a poor
-;; design. we probably should implement something like
-;; `phi-search-get-query' function to fetch converted query.
-
-(defvar phi-search--target nil
-  "the target (window . buffer) which this prompt buffer is for")
-(make-variable-buffer-local 'phi-search--target)
-
-(defvar phi-search--before-complete-function nil
-  "function called IN THIS PROMPT BUFFER just before phi-search
-  completes")
-(make-variable-buffer-local 'phi-search--before-complete-function)
-
-(defvar phi-search--convert-query-function nil
-  "function that converts search query.")
-(make-variable-buffer-local 'phi-search--convert-query-function)
-
-(defvar phi-search--fail-pos nil
-  "save position where search fail begin with.")
-(make-variable-buffer-local 'phi-search--fail-pos)
-
-(defvar phi-search--message-start nil
-  "starting position of a message. nil if no message is active.")
-(make-variable-buffer-local 'phi-search--message-start)
-
-(defvar phi-search--pending-message nil
-  "a pending message string, or nil.")
-(make-variable-buffer-local 'phi-search--pending-message)
-
-;; ++ functions
-
-(defvar phi-search--last-converted-query nil)
 (defun phi-search--generate-query (q)
   (if (null phi-search--convert-query-function) q
     (funcall phi-search--convert-query-function q)))
@@ -472,15 +449,18 @@ Otherwise yank a word from target buffer and expand query."
 
 (defun phi-search--initialize (modeline-fmt keybinds filter-fn update-fn
                                             complete-fn &optional conv-fn init-fn prompt)
-  (setq phi-search--saved-modeline-format  mode-line-format)
-  (setq mode-line-format                   modeline-fmt
-        phi-search--original-position      (point)
-        phi-search--filter-function        filter-fn
-        phi-search--after-update-function  update-fn
-        phi-search--selection              nil
-        phi-search--overlays               nil)
   (let ((wnd (selected-window))
         (buf (current-buffer)))
+    (setq phi-search--saved-mode-line-format  mode-line-format)
+    (setq mode-line-format                     modeline-fmt
+          phi-search--original-position        (point)
+          phi-search--filter-function          filter-fn
+          phi-search--after-update-function    update-fn
+          phi-search--selection                nil
+          phi-search--overlays                 nil
+          phi-search--target                   (cons wnd buf)
+          phi-search--convert-query-function   conv-fn
+          phi-search--before-complete-function complete-fn)
     (minibuffer-with-setup-hook
         (lambda ()
           ;; *FIXME* does wrong when a timer modifies the minibuffer
@@ -488,9 +468,6 @@ Otherwise yank a word from target buffer and expand query."
           (add-hook 'pre-command-hook 'phi-search--clear-message nil t)
           (add-hook 'after-change-functions 'phi-search--update nil t)
           (add-hook 'post-command-hook 'phi-search--restore-message nil t)
-          (setq phi-search--target                   (cons wnd buf)
-                phi-search--convert-query-function   conv-fn
-                phi-search--before-complete-function complete-fn)
           (run-hooks 'phi-search-hook)
           (funcall init-fn))
       (read-from-minibuffer
@@ -510,13 +487,8 @@ Otherwise yank a word from target buffer and expand query."
     (phi-search--with-target-buffer
      (phi-search--delete-overlays t)
      (phi-search--open-invisible-permanently)
-     (setq mode-line-format                   phi-search--saved-modeline-format
-           phi-search--original-position      nil
-           phi-search--filter-function        nil
-           phi-search--after-update-function  nil
-           phi-search--selection              nil
-           phi-search--overlays               nil
-           phi-search--last-executed          str)))
+     (setq mode-line-format          phi-search--saved-mode-line-format
+           phi-search--last-executed str)))
   (exit-minibuffer)         ; exit-minibuffer must be called at last
   )
 
