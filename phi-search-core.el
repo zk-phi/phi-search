@@ -469,7 +469,7 @@ Otherwise yank a word from target buffer and expand query."
           (add-hook 'after-change-functions 'phi-search--update nil t)
           (add-hook 'post-command-hook 'phi-search--restore-message nil t)
           (run-hooks 'phi-search-hook)
-          (funcall init-fn))
+          (when init-fn (funcall init-fn)))
       (read-from-minibuffer
        (or prompt "phi-search: ") nil
        (let ((kmap (copy-keymap phi-search-default-map)))
