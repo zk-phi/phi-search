@@ -118,8 +118,7 @@ and bind a key.
 
 : (global-set-key (kbd "M-%") 'phi-replace-query)
 
-Keybinds in *phi-search* buffer are basically the same as phi-search,
-by default.
+Keybinds are basically the same as phi-search, by default.
 
 ** Customization
 *** Keybinds
@@ -168,15 +167,6 @@ look not pretty in your colorscheme, you may modify them.
 
 : (set-face-attribute 'phi-search-selection-face nil
 :                     :background "orange")
-
-** Known Bugs and Limitations
-
-- popwin.el compatibility
-
-  Because "phi-search" command creates a new window, it is not
-  available in the singleton pop-up window (which "popwin.el"
-  creates). Therefore, if the selected window is pop-up window,
-  "phi-search" command will call "isearch-forward" instead.
 
 ** Notes
 
