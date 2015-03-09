@@ -138,9 +138,10 @@
          (if phi-replace--query-mode
              (phi-search--with-sublimity (phi-search--select n))
            (phi-search--select n))
-         (let ((ov (nth n phi-search--overlays)))
-           (goto-char (overlay-start ov))
-           (looking-at query)
+         (let* ((ov (nth n phi-search--overlays))
+                (match-data (progn (goto-char (overlay-start ov))
+                                   (looking-at query)
+                                   (match-data))))
            (if (and phi-replace--query-mode
                     (let ((ch (read-char-choice
                                (format "replace with %s (y, n or !) ? "
@@ -150,6 +151,7 @@
                           (setq phi-replace--query-mode nil)
                         (= ch ?n))))
                (overlay-put ov 'face 'defualt)
+             (set-match-data match-data)
              (replace-match str))
            (overlay-put ov 'after-string nil))
          (when (and (not phi-replace--query-mode) phi-replace-weight)
