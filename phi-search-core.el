@@ -167,11 +167,16 @@ INCLUSIVE is non-nil."
                                     (string= query (downcase query)))))
          (pos1 (point))
          (pos2 (search-forward-regexp query limit t)))
-    (if (or (and (not inclusive) pos2 (= pos1 pos2))
-            (and filter (not (save-match-data (funcall filter)))))
-        (progn
-          (forward-char 1)
-          (phi-search--search-forward query limit filter t))
+    ;; recursion is not good idea here since specpdl may overflow if
+    ;; there're too many matches that don't satisfy FILTER.
+    (if (and (or inclusive (not pos2) (not (= pos1 pos2)))
+             (or (null filter) (save-match-data (funcall filter))))
+        pos2
+      ;; try another match
+      (while (unless (eobp)
+               (forward-char 1)
+               (setq pos2 (search-forward-regexp query limit t))
+               (and filter (not (save-match-data (funcall filter))))))
       pos2)))
 
 (defun phi-search--open-invisible-temporary (hidep)
