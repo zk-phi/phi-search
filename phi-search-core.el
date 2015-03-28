@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.1.1
+;; Version: 2.1.2
 
 ;;; Commentary:
 
@@ -37,10 +37,11 @@
 ;; 2.0.0 use minibuffer to read query
 ;; 2.1.0 use "phi-search--message" to display messages
 ;; 2.1.1 add option phi-search-highlight-mismatch-part
+;; 2.1.2 prefer direct keymapping to remapping
 
 ;;; Code:
 
-(defconst phi-search-core-version "2.1.1")
+(defconst phi-search-core-version "2.1.2")
 
 ;; + customs
 
@@ -66,15 +67,11 @@
     (define-key kmap (kbd "C-r") 'phi-search-again-or-previous)
     (define-key kmap [remap phi-search] 'phi-search-again-or-next)
     (define-key kmap [remap phi-search-backward] 'phi-search-again-or-previous)
-    (define-key kmap [remap keyboard-quit] 'phi-search-abort)
-    (define-key kmap [remap scroll-up] 'phi-search-scroll-up)
-    (define-key kmap [remap pager-page-down] 'phi-search-scroll-up)
-    (define-key kmap [remap scroll-up-command] 'phi-search-scroll-up)
-    (define-key kmap [remap pager-page-up] 'phi-search-scroll-down)
-    (define-key kmap [remap scroll-down-command] 'phi-search-scroll-down)
-    (define-key kmap [remap recenter] 'phi-search-recenter)
-    (define-key kmap [remap kill-region] 'phi-search-yank-word)
-    (define-key kmap [remap phi-rectangle-kill-region] 'phi-search-yank-word)
+    (define-key kmap (kbd "C-g") 'phi-search-abort)
+    (define-key kmap (kbd "C-v") 'phi-search-scroll-up)
+    (define-key kmap (kbd "M-v") 'phi-search-scroll-down)
+    (define-key kmap (kbd "C-l") 'phi-search-recenter)
+    (define-key kmap (kbd "C-w") 'phi-search-yank-word)
     (define-key kmap (kbd "RET") 'phi-search-complete)
     (define-key kmap (kbd "C-c C-c") 'phi-search-unlimit)
     kmap)

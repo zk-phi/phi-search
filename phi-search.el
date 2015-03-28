@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.2.1
+;; Version: 2.2.2
 
 ;;; Commentary:
 
@@ -42,19 +42,19 @@
 ;;
 ;;   Similar to phi-search-again-or-next, but move to the previous item.
 
-;; - phi-search-scroll-up (replaces "scroll-up")
+;; - [M-v] phi-search-scroll-up
 ;;
 ;;   Scroll the target window up, to check candidates.
 
-;; - phi-search-scroll-down (replaces "scroll-down")
+;; - [C-v] phi-search-scroll-down
 ;;
 ;;   Scroll the target window down.
 
-;; - phi-search-recenter (replaces "recenter")
+;; - [C-l] phi-search-recenter
 ;;
 ;;   Recenter the target window.
 
-;; - phi-search-yank-word (replaces "kill-region")
+;; - [C-w] phi-search-yank-word
 ;;
 ;;   Expand query by yanking one word from the target buffer.
 
@@ -109,6 +109,7 @@
 ;; 2.1.1 compatible with phi-search-core v1.2.0
 ;; 2.2.0 compatibility with phi-search-core v2.0.0
 ;; 2.2.1 call phi-search even in a popup window
+;; 2.2.2 prefer direct keymapping to remapping
 
 ;;; Code:
 
@@ -116,7 +117,7 @@
 
 ;; + constants
 
-(defconst phi-search-version "2.2.1")
+(defconst phi-search-version "2.2.2")
 
 ;; + suppress byte-compiler
 
@@ -129,9 +130,9 @@
   :group 'phi-search)
 
 (defcustom phi-search-additional-keybinds
-  '(([remap next-line] . 'phi-search-maybe-next-line)
-    ([remap previous-line] . 'phi-search-maybe-previous-line)
-    ([remap forward-char] . 'phi-search-maybe-forward-char)
+  '(((kbd "C-n") . 'phi-search-maybe-next-line)
+    ((kbd "C-p") . 'phi-search-maybe-previous-line)
+    ((kbd "C-f") . 'phi-search-maybe-forward-char)
     ((kbd "C-<return>") . 'phi-search-complete-at-beginning))
   "additional bindings used in phi-search"
   :group 'phi-search)

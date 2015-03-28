@@ -22,28 +22,28 @@ may bind a key to the command.
 
 While searching, following commands are available.
 
-- phi-search-again-or-next [C-s]
+- [C-s] phi-search-again-or-next
 
   Move to the next matching item. If query is blank, use the last
   query.
 
-- phi-search-again-or-previous [C-r]
+- [C-r] phi-search-again-or-previous
 
   Similar to phi-search-again-or-next, but move to the previous item.
 
-- phi-search-scroll-up (replaces "scroll-up-command", defualt [C-v])
+- [C-v] phi-search-scroll-up
 
   Scroll the target window up, to check candidates.
 
-- phi-search-scroll-down (replaces "scroll-down-command", default [M-v])
+- [M-v] phi-search-scroll-down
 
   Scroll the target window down.
 
-- phi-search-recenter (replaces "recenter", default [C-l])
+- [C-l] phi-search-recenter
 
   Recenter the target window.
 
-- phi-search-yank-word (replaces "kill-region", default [C-w])
+- [C-w] phi-search-yank-word
 
   Expand query by yanking one word from the target buffer.
 
