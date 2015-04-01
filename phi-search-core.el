@@ -312,7 +312,7 @@ success, or nil on failuare."
   "select next item."
   (phi-search--with-target-buffer
    (when (null phi-search--selection)
-     (error "no matches"))
+     (signal 'search-failed "No matches"))
    (phi-search--with-sublimity
     (unless (phi-search--select (1+ phi-search--selection))
       (phi-search--select 0)
@@ -323,7 +323,7 @@ success, or nil on failuare."
   "select previous item."
   (phi-search--with-target-buffer
    (when (null phi-search--selection)
-     (error "no matches"))
+     (signal 'search-failed "No matches"))
    (phi-search--with-sublimity
     (unless (phi-search--select (1- phi-search--selection))
       (phi-search--select (1- (length phi-search--overlays)))
@@ -378,7 +378,12 @@ position from where input is highlighted when search failed."
   (let ((str (phi-search--with-target-buffer
               phi-search--last-executed)))
     (if (not (string= (minibuffer-contents) ""))
-        (phi-search-next)
+        (condition-case nil
+            (phi-search-next)
+          ((search-failed)
+           (if (called-interactively-p 'interactive)
+               (message "No matches.")
+             (error "No matches."))))
       (when str (insert str)))))
 
 (defun phi-search-again-or-previous ()
@@ -387,7 +392,12 @@ position from where input is highlighted when search failed."
   (let ((str (phi-search--with-target-buffer
               phi-search--last-executed)))
     (if (not (string= (minibuffer-contents) ""))
-        (phi-search-previous)
+        (condition-case nil
+            (phi-search-previous)
+          ((search-failed)
+           (if (called-interactively-p 'interactive)
+               (message "No matches.")
+             (error "No matches."))))
       (when str (insert str)))))
 
 ;; + replace scroll commands
