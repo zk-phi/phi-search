@@ -464,36 +464,37 @@ Otherwise yank a word from target buffer and expand query."
 
 (defun phi-search--initialize (modeline-fmt keybinds filter-fn update-fn
                                             complete-fn &optional conv-fn init-fn prompt)
-  (when phi-search--active
-    (error "phi-search: recursive search is not implemented."))
-  (let ((wnd (selected-window))
-        (buf (current-buffer)))
-    (setq phi-search--saved-mode-line-format  mode-line-format)
-    (setq mode-line-format                     modeline-fmt
-          phi-search--active                   t
-          phi-search--original-position        (point)
-          phi-search--filter-function          filter-fn
-          phi-search--after-update-function    update-fn
-          phi-search--selection                nil
-          phi-search--overlays                 nil
-          phi-search--target                   (cons wnd buf)
-          phi-search--convert-query-function   conv-fn
-          phi-search--before-complete-function complete-fn)
-    (minibuffer-with-setup-hook
-        (lambda ()
-          ;; *FIXME* does wrong when a timer modifies the minibuffer
-          ;; ('cause message is not cleared yet)
-          (add-hook 'pre-command-hook 'phi-search--clear-message nil t)
-          (add-hook 'after-change-functions 'phi-search--update nil t)
-          (add-hook 'post-command-hook 'phi-search--restore-message nil t)
-          (run-hooks 'phi-search-hook)
-          (when init-fn (funcall init-fn)))
-      (read-from-minibuffer
-       (or prompt "phi-search: ") nil
-       (let ((kmap (copy-keymap phi-search-default-map)))
-         (dolist (bind (reverse keybinds))
-           (eval `(define-key kmap ,(car bind) ,(cdr bind))))
-         kmap)))))
+  (if phi-search--active
+      ;; if phi-search is already active, just switch to the minibuffer
+      (select-window (active-minibuffer-window))
+    (let ((wnd (selected-window))
+          (buf (current-buffer)))
+      (setq phi-search--saved-mode-line-format  mode-line-format)
+      (setq mode-line-format                     modeline-fmt
+            phi-search--active                   t
+            phi-search--original-position        (point)
+            phi-search--filter-function          filter-fn
+            phi-search--after-update-function    update-fn
+            phi-search--selection                nil
+            phi-search--overlays                 nil
+            phi-search--target                   (cons wnd buf)
+            phi-search--convert-query-function   conv-fn
+            phi-search--before-complete-function complete-fn)
+      (minibuffer-with-setup-hook
+          (lambda ()
+            ;; *FIXME* does wrong when a timer modifies the minibuffer
+            ;; ('cause message is not cleared yet)
+            (add-hook 'pre-command-hook 'phi-search--clear-message nil t)
+            (add-hook 'after-change-functions 'phi-search--update nil t)
+            (add-hook 'post-command-hook 'phi-search--restore-message nil t)
+            (run-hooks 'phi-search-hook)
+            (when init-fn (funcall init-fn)))
+        (read-from-minibuffer
+         (or prompt "phi-search: ") nil
+         (let ((kmap (copy-keymap phi-search-default-map)))
+           (dolist (bind (reverse keybinds))
+             (eval `(define-key kmap ,(car bind) ,(cdr bind))))
+           kmap))))))
 
 (defun phi-search-complete (&rest args)
   "finish phi-search. (for developers: ARGS are passed to complete-function)"
