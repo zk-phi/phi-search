@@ -103,6 +103,9 @@
 
 ;; + internal vars
 
+(defvar phi-search--active nil
+  "non-nil if phi-search is active.")
+
 (defvar phi-search--last-executed nil
   "the last query used")
 (make-variable-buffer-local 'phi-search--last-executed)
@@ -461,10 +464,13 @@ Otherwise yank a word from target buffer and expand query."
 
 (defun phi-search--initialize (modeline-fmt keybinds filter-fn update-fn
                                             complete-fn &optional conv-fn init-fn prompt)
+  (when phi-search--active
+    (error "phi-search: recursive search is not implemented."))
   (let ((wnd (selected-window))
         (buf (current-buffer)))
     (setq phi-search--saved-mode-line-format  mode-line-format)
     (setq mode-line-format                     modeline-fmt
+          phi-search--active                   t
           phi-search--original-position        (point)
           phi-search--filter-function          filter-fn
           phi-search--after-update-function    update-fn
@@ -500,6 +506,7 @@ Otherwise yank a word from target buffer and expand query."
      (phi-search--delete-overlays t)
      (phi-search--open-invisible-permanently)
      (setq mode-line-format          phi-search--saved-mode-line-format
+           phi-search--active        nil
            phi-search--last-executed str)))
   (exit-minibuffer)         ; exit-minibuffer must be called at last
   )
