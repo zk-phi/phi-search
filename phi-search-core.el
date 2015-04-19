@@ -464,7 +464,7 @@ Otherwise yank a word from target buffer and expand query."
 
 (defun phi-search--initialize (modeline-fmt keybinds filter-fn update-fn
                                             complete-fn &optional conv-fn init-fn prompt)
-  (if phi-search--active
+  (if (and phi-search--active (active-minibuffer-window))
       ;; if phi-search is already active, just switch to the minibuffer
       (select-window (active-minibuffer-window))
     (let ((wnd (selected-window))
