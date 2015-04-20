@@ -464,6 +464,10 @@ Otherwise yank a word from target buffer and expand query."
 
 (defun phi-search--initialize (modeline-fmt keybinds filter-fn update-fn
                                             complete-fn &optional conv-fn init-fn prompt)
+  ;;
+  ;; *FIXME* `phi-search--active' sometimes be non-nil even when
+  ;; `active-minibuffer-window' returns `nil'. (GitHub Issue #41)
+  ;;
   (if (and phi-search--active (active-minibuffer-window))
       ;; if phi-search is already active, just switch to the minibuffer
       (select-window (active-minibuffer-window))
