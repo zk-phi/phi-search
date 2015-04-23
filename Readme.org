@@ -136,7 +136,7 @@ commands only for a specific command, you may use variables below.
 - phi-search-additional-keybinds :: list of (KEY . COMMAND) used in
      "phi-search(-backward)" command
 
-- phi-replace-additinoal-keybinds :: list of (KEY . COMMAND) used in
+- phi-replace-additional-keybinds :: list of (KEY . COMMAND) used in
      "phi-replace(-query)" command
 
 : (push '((kbd "<app>") . 'phi-search-complete-at-beginning)
