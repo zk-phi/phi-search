@@ -246,9 +246,9 @@ omitted or nil, number of matches is limited to
         (while (and (phi-search--search-forward query nil phi-search--filter-function)
                     (let ((ov (make-overlay (match-beginning 0) (match-end 0))))
                       (overlay-put ov 'face 'phi-search-match-face)
-                      (push ov (if (< (match-beginning 0) phi-search--original-position)
-                                   before
-                                 after))
+                      (if (< (match-beginning 0) phi-search--original-position)
+                          (push ov before)
+                        (push ov after))
                       (setq cnt (1+ cnt))
                       (or unlimited (< cnt phi-search-limit)))))
         (setq phi-search--overlays (nconc (nreverse after) (nreverse before)))))
