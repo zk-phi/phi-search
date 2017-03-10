@@ -127,7 +127,8 @@
 
 (defcustom phi-search-init-hook nil
   "hook run after initialization of phi-search"
-  :group 'phi-search)
+  :group 'phi-search
+  :type '(repeat function))
 
 (defcustom phi-search-additional-keybinds
   '(((kbd "C-n") . 'phi-search-maybe-next-line)
@@ -135,7 +136,8 @@
     ((kbd "C-f") . 'phi-search-maybe-forward-char)
     ((kbd "C-<return>") . 'phi-search-complete-at-beginning))
   "additional bindings used in phi-search"
-  :group 'phi-search)
+  :group 'phi-search
+  :type 'list)
 
 (defcustom phi-search-mode-line-format
   '(" *phi-search*"
@@ -144,7 +146,8 @@
              (when selection
                (format " [ %d / %d ]" (1+ selection) total)))))
   "mode-line-format for phi-search(-backward)"
-  :group 'phi-search)
+  :group 'phi-search
+  :type 'list)
 
 ;; + variables
 

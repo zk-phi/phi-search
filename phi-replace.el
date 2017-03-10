@@ -69,20 +69,24 @@
 
 (defcustom phi-replace-weight nil
   "weight for \"phi-replace\""
-  :group 'phi-search)
+  :group 'phi-search
+  :type 'number)
 
 (defcustom phi-replace-init-hook nil
   "hook run after initialization of phi-replace"
-  :group 'phi-search)
+  :group 'phi-search
+  :type 'hook)
 
 (defcustom phi-replace-additional-keybinds
   '(([remap phi-search-complete] . 'phi-replace-again-or-complete))
   "additional bindings used in phi-replace"
-  :group 'phi-search)
+  :group 'phi-search
+  :type 'list)
 
 (defcustom phi-replace-enable-preview t
   "wnen non-nil, show interactive preview of replace."
-  :group 'phi-search)
+  :group 'phi-search
+  :type 'boolean)
 
 ;; + faces
 

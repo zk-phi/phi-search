@@ -51,15 +51,18 @@
 
 (defcustom phi-search-limit 1000
   "maximum number of accepted matches"
-  :group 'phi-search)
+  :group 'phi-search
+  :type 'integer)
 
 (defcustom phi-search-case-sensitive nil
   "when non-nil, phi-search become case sensitive"
-  :group 'phi-search)
+  :group 'phi-search
+  :type 'boolean)
 
 (defcustom phi-search-highlight-mismatch-part t
   "when non-nil, mismatch part of the input is highlighted."
-  :group 'phi-search)
+  :group 'phi-search
+  :type 'boolean)
 
 (defcustom phi-search-default-map
   (let ((kmap (make-sparse-keymap)))
@@ -76,11 +79,13 @@
     (define-key kmap (kbd "C-c C-c") 'phi-search-unlimit)
     kmap)
   "keymap for the phi-search prompt buffers"
-  :group 'phi-search)
+  :group 'phi-search
+  :type 'sexp)
 
 (defcustom phi-search-hook nil
   "hook run when phi-search buffer is prepared."
-  :group 'phi-search)
+  :group 'phi-search
+  :type 'hook)
 
 ;; + faces
 
