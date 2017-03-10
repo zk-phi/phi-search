@@ -1,6 +1,6 @@
 ;;; phi-replace.el --- another incremental search & replace, compatible with "multiple-cursors"
 
-;; Copyright (C) 2013-2015 zk_phi
+;; Copyright (C) 2013- zk_phi
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

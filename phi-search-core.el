@@ -1,6 +1,6 @@
 ;;; phi-search-core.el --- another incremental search & replace, compatible with "multiple-cursors"
 
-;; Copyright (C) 2013-2015 zk_phi
+;; Copyright (C) 2013- zk_phi
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.1.2
+;; Version: 2.1.3
 
 ;;; Commentary:
 
@@ -38,10 +38,11 @@
 ;; 2.1.0 use "phi-search--message" to display messages
 ;; 2.1.1 add option phi-search-highlight-mismatch-part
 ;; 2.1.2 prefer direct keymapping to remapping
+;; 2.1.3 add option "phi-search-overlay-priority"
 
 ;;; Code:
 
-(defconst phi-search-core-version "2.1.2")
+(defconst phi-search-core-version "2.1.3")
 
 ;; + customs
 
