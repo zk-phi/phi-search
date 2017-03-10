@@ -49,6 +49,11 @@
   "another incremental search interface"
   :group 'emacs)
 
+(defcustom phi-search-overlay-priority 1
+  "Priority which phi-search overlays get."
+  :group 'phi-search
+  :type 'integer)
+
 (defcustom phi-search-limit 1000
   "maximum number of accepted matches"
   :group 'phi-search
@@ -251,6 +256,7 @@ omitted or nil, number of matches is limited to
         (while (and (phi-search--search-forward query nil phi-search--filter-function)
                     (let ((ov (make-overlay (match-beginning 0) (match-end 0))))
                       (overlay-put ov 'face 'phi-search-match-face)
+                      (overlay-put ov 'priority phi-search-overlay-priority)
                       (if (< (match-beginning 0) phi-search--original-position)
                           (push ov before)
                         (push ov after))
