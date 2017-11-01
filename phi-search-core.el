@@ -96,14 +96,12 @@
 ;; + faces
 
 (defface phi-search-match-face
-  '((((background light)) (:background "#b5dee9"))
-    (t (:background "#194854")))
+  '((t (:inherit 'lazy-highlight)))
   "Face used to highlight matching items in phi-search."
   :group 'phi-search)
 
 (defface phi-search-selection-face
-  '((((background light)) (:background "#e0d9de"))
-    (t (:background "#594854")))
+  '((t (:inherit 'isearch)))
   "Face used to highlight selected items in phi-search."
   :group 'phi-search)
 
