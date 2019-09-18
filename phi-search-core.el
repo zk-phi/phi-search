@@ -80,6 +80,7 @@
     (define-key kmap (kbd "C-v") 'phi-search-scroll-up)
     (define-key kmap (kbd "M-v") 'phi-search-scroll-down)
     (define-key kmap (kbd "C-l") 'phi-search-recenter)
+    (define-key kmap (kbd "M-c") 'phi-search-case-toggle)
     (define-key kmap (kbd "C-w") 'phi-search-yank-word)
     (define-key kmap (kbd "RET") 'phi-search-complete)
     (define-key kmap (kbd "C-c C-c") 'phi-search-unlimit)
@@ -469,6 +470,21 @@ Otherwise yank a word from target buffer and expand query."
                  (t (forward-word)))
            (point)))))
     (kill-region (region-beginning) (region-end))))
+
+(defun phi-search-case-toggle (arg)
+  "change case sensitivity for phi-search on-the-fly.
+   parameter prefix arg: C-u or C-4: activate case sensitivity
+                      C-0: Case deactivate sensitivity
+                      nil: toggle value"
+  (interactive "p")
+  (setq phi-search-case-sensitive
+	(cond ((= 4 arg)
+	       't)
+	      ((= 0 arg)
+	       'nil)
+	      ('t
+	       (not phi-search-case-sensitive))))
+  (phi-search--update))
 
 ;; + start/end phi-search
 
