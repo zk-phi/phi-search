@@ -164,6 +164,9 @@
 (defvar phi-search--pending-message nil
   "a pending message string, or nil.")
 
+(defvar phi-search--case-sensitive nil
+  "case sensitivity for this phi-search session.")
+
 ;; + utilities
 
 (defun phi-search--search-forward (query limit &optional filter inclusive)
@@ -172,8 +175,8 @@ to search for candidates. like (search-forward-regexp <> nil t)
 but case-sensitivity is handled automatically and result is
 filtered with FILTER. zero-width match is accepted only when
 INCLUSIVE is non-nil."
-  (let* ((case-fold-search (or (not phi-search-case-sensitive)
-                               (and (eq phi-search-case-sensitive 'guess)
+  (let* ((case-fold-search (or (not phi-search--case-sensitive)
+                               (and (eq phi-search--case-sensitive 'guess)
                                     (string= query (downcase query)))))
          (pos1 (point))
          (pos2 (search-forward-regexp query limit t)))
@@ -477,13 +480,14 @@ Otherwise yank a word from target buffer and expand query."
                       C-0: Case deactivate sensitivity
                       nil: toggle value"
   (interactive "p")
-  (setq phi-search-case-sensitive
-	(cond ((= 4 arg)
-	       't)
-	      ((= 0 arg)
-	       'nil)
-	      ('t
-	       (not phi-search-case-sensitive))))
+  (let ((newvalue
+         (cond ((= 4 arg) t)
+               ((= 0 arg) nil)
+               (t (not phi-search--case-sensitive)))))
+    (setq phi-search--case-sensitive newvalue)
+    (message (if newvalue
+                 "Enabled phi-search-case-sensitive."
+               "Disabled phi-search-case-sensitive.")))
   (phi-search--update))
 
 ;; + start/end phi-search
@@ -509,7 +513,8 @@ Otherwise yank a word from target buffer and expand query."
             phi-search--overlays                 nil
             phi-search--target                   (cons wnd buf)
             phi-search--convert-query-function   conv-fn
-            phi-search--before-complete-function complete-fn)
+            phi-search--before-complete-function complete-fn
+            phi-search--case-sensitive           phi-search-case-sensitive)
       (minibuffer-with-setup-hook
           (lambda ()
             ;; *FIXME* does wrong when a timer modifies the minibuffer
