@@ -43,6 +43,10 @@ While searching, following commands are available.
 
   Recenter the target window.
 
+- [M-c] phi-search-case-toggle
+
+  Toggle `phi-search-case-sensitive` on-the-fly.
+
 - [C-w] phi-search-yank-word
 
   Expand query by yanking one word from the target buffer.
