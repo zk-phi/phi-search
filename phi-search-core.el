@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.1.3
+;; Version: 2.1.4
 
 ;;; Commentary:
 
@@ -39,6 +39,7 @@
 ;; 2.1.1 add option phi-search-highlight-mismatch-part
 ;; 2.1.2 prefer direct keymapping to remapping
 ;; 2.1.3 add option "phi-search-overlay-priority"
+;; 2.1.4 add command "phi-search-case-toggle"
 
 ;;; Code:
 
