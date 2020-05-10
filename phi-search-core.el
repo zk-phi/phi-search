@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 2.1.4
+;; Version: 2.1.5
 
 ;;; Commentary:
 
@@ -40,6 +40,7 @@
 ;; 2.1.2 prefer direct keymapping to remapping
 ;; 2.1.3 add option "phi-search-overlay-priority"
 ;; 2.1.4 add command "phi-search-case-toggle"
+;; 2.1.5 add option "phi-search-use-modeline"
 
 ;;; Code:
 
@@ -68,6 +69,12 @@
 
 (defcustom phi-search-highlight-mismatch-part t
   "when non-nil, mismatch part of the input is highlighted."
+  :group 'phi-search
+  :type 'boolean)
+
+(defcustom phi-search-use-modeline t
+  "when non-nil, phi-search will override the modeline to display
+the status."
   :group 'phi-search
   :type 'boolean)
 
@@ -289,6 +296,8 @@ success, or nil on failuare."
                    'face 'phi-search-match-face))
     ;; select new item if there
     (let ((ov (nth n phi-search--overlays)))
+      (unless phi-search-use-modeline
+        (phi-search--message (format "%d/%d" (1+ n) (length phi-search--overlays))))
       (setq phi-search--selection n)
       (overlay-put ov 'face 'phi-search-selection-face)
       (goto-char (overlay-end ov))
@@ -504,9 +513,11 @@ Otherwise yank a word from target buffer and expand query."
       (select-window (active-minibuffer-window))
     (let ((wnd (selected-window))
           (buf (current-buffer)))
-      (setq phi-search--saved-mode-line-format  mode-line-format)
-      (setq mode-line-format                     modeline-fmt
-            phi-search--active                   t
+      (when phi-search-use-modeline
+        (setq phi-search--saved-mode-line-format mode-line-format
+              mode-line-format                   modeline-fmt))
+      (setq phi-search--active                   t
+            phi-search--pending-message          nil
             phi-search--original-position        (point)
             phi-search--filter-function          filter-fn
             phi-search--after-update-function    update-fn
@@ -542,8 +553,9 @@ Otherwise yank a word from target buffer and expand query."
     (phi-search--with-target-buffer
      (phi-search--delete-overlays t)
      (phi-search--open-invisible-permanently)
-     (setq mode-line-format          phi-search--saved-mode-line-format
-           phi-search--active        nil
+     (when phi-search-use-modeline
+       (setq mode-line-format phi-search--saved-mode-line-format))
+     (setq phi-search--active        nil
            phi-search--last-executed str)))
   (exit-minibuffer)         ; exit-minibuffer must be called at last
   )
