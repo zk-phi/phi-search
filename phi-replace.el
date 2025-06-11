@@ -108,6 +108,9 @@
 (defvar phi-replace--mode-line-format
   '(" *phi-replace*" (:eval (format " [ %d ]" (length phi-search--overlays)))))
 
+(defun phi-replace--fixed-case ()
+  (not (and case-replace case-fold-search)))
+
 (defun phi-replace--update-visual-preview (query replac)
   (save-excursion
     (dolist (ov phi-search--overlays)
@@ -117,7 +120,7 @@
        ov 'after-string
        (ignore-errors
          (propertize
-          (concat "=>" (match-substitute-replacement replac))
+          (concat "=>" (match-substitute-replacement replac (phi-replace--fixed-case)))
           'face 'phi-replace-preview-face))))))
 
 (defun phi-replace--complete-function ()
@@ -149,14 +152,14 @@
            (if (and phi-replace--query-mode
                     (let ((ch (read-char-choice
                                (format "replace with %s (y, n or !) ? "
-                                       (match-substitute-replacement str))
+                                       (match-substitute-replacement str (phi-replace--fixed-case)))
                                '(?y ?n ?!))))
                       (if (= ch ?!)
                           (setq phi-replace--query-mode nil)
                         (= ch ?n))))
                (overlay-put ov 'face 'defualt)
              (set-match-data match-data)
-             (replace-match str))
+             (replace-match str (phi-replace--fixed-case)))
            (overlay-put ov 'after-string nil))
          (when (and (not phi-replace--query-mode) phi-replace-weight)
            (sit-for phi-replace-weight)))
